@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKSL 셰이더 교육 자료</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .lesson {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .lesson-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+
+        .lesson-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .lesson-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .lesson-content {
+            display: flex;
+            min-height: 500px;
+        }
+
+        .editor-section {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-section {
+            width: 50%;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #e9ecef;
+        }
+
+        .section-header {
+            background: #495057;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-editor {
+            flex: 1;
+            padding: 0;
+            border: none;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            outline: none;
+            resize: none;
+            padding: 20px;
+        }
+
+        .preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .preview-canvas {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #343a40;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn.success {
+            background: #28a745;
+        }
+
+        .btn.success:hover {
+            background: #1e7e34;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border-left: 4px solid #dc3545;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .key-concepts {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px 20px;
+            margin: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .key-concepts h4 {
+            color: #0056b3;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .key-concepts ul {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .key-concepts li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .lesson-content {
+                flex-direction: column;
+            }
+            
+            .editor-section, .preview-section {
+                width: 100%;
+            }
+
+            .preview-section {
+                border-left: none;
+                border-top: 2px solid #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 SKSL 셰이더 교육 자료</h1>
+        <p>단계별로 배우는 셰이더 프로그래밍</p>
+    </div>
+
+    <div class="container">
+        <!-- 첫 번째 예제: 기본 색상 -->
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title">1단계: 기본 색상 만들기</div>
+                <div class="lesson-description">
+                    가장 간단한 셰이더부터 시작해봅시다! 이 예제에서는 화면 전체를 빨간색으로 채우는 셰이더를 만들어봅니다.
+                    <code>half4</code>는 RGBA 색상을 나타내며, 각 값은 0.0에서 1.0 사이의 범위를 갖습니다.
+                </div>
+            </div>
+            
+            <div class="key-concepts">
+                <h4>🔑 핵심 개념</h4>
+                <ul>
+                    <li><strong>half4 main()</strong>: 셰이더의 메인 함수, 최종 픽셀 색상을 반환</li>
+                    <li><strong>half4(r, g, b, a)</strong>: 빨강, 초록, 파랑, 투명도 값 (0.0~1.0)</li>
+                    <li><strong>return</strong>: 계산된 색상을 화면에 출력</li>
+                </ul>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor1">half4 main(float2 fragCoord) {
+    // 빨간색을 반환합니다
+    // half4(빨강, 초록, 파랑, 투명도)
+    return half4(1.0, 0.0, 0.0, 1.0);
+}</textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(1)">🚀 컴파일 및 실행</button>
+                        <button class="btn success" onclick="tryColorVariation(1)">🎨 다른 색상 시도</button>
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error1"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 두 번째 예제: 그라디언트 -->
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title">2단계: 그라디언트 만들기</div>
+                <div class="lesson-description">
+                    이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고, 
+                    이를 정규화하여 0.0에서 1.0 사이의 값으로 변환합니다.
+                </div>
+            </div>
+            
+            <div class="key-concepts">
+                <h4>🔑 핵심 개념</h4>
+                <ul>
+                    <li><strong>fragCoord</strong>: 현재 픽셀의 화면 좌표 (예: 150, 200)</li>
+                    <li><strong>iResolution</strong>: 화면 해상도 (너비, 높이)</li>
+                    <li><strong>uv 좌표</strong>: 정규화된 좌표 (0.0~1.0 범위)</li>
+                    <li><strong>그라디언트</strong>: 위치에 따라 색상이 점진적으로 변하는 효과</li>
+                </ul>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor2">
+                    uniform float2 iResolution;
+                    half4 main(float2 fragCoord) {
+                        // 화면 좌표를 0.0~1.0으로 정규화
+                        float2 uv = fragCoord / iResolution.xy;
+                        
+                        // 왼쪽에서 오른쪽으로 빨강에서 파랑으로 변하는 그라디언트
+                        float3 color = float3(uv.x, 0.0, 1.0 - uv.x);
+                        
+                        return half4(color, 1.0);
+                    }</textarea>
+
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(2)">🚀 컴파일 및 실행</button>
+                        <button class="btn success" onclick="tryGradientVariation(2)">🌈 다른 그라디언트 시도</button>
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error2"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading2">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas2" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/canvaskit.min.js"></script>
+    <script>
+        let CanvasKit = null;
+        const lessons = {};
+
+        // CanvasKit 초기화
+        async function initCanvasKit() {
+            try {
+                CanvasKit = await CanvasKitInit({
+                    locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/${file}`
+                });
+
+                // 각 레슨 초기화
+                for (let i = 1; i <= 2; i++) {
+                    const canvas = document.getElementById(`canvas${i}`);
+                    const loading = document.getElementById(`loading${i}`);
+                    const surface = CanvasKit.MakeCanvasSurface(`canvas${i}`);
+                    if (surface) {
+                        lessons[i] = {
+                            surface: surface,
+                            canvas: surface.getCanvas()
+                        };
+                        
+                        loading.style.display = 'none';
+                        canvas.style.display = 'block';
+                        
+                        // 초기 컴파일
+                        compileShader(i);
+                    }
+                }
+            } catch (error) {
+                console.error('CanvasKit 초기화 실패:', error);
+            }
+        }
+
+        function showError(lessonNum, message) {
+            document.getElementById(`error${lessonNum}`).innerHTML = 
+                `<div class="error">❌ ${message}</div>`;
+        }
+
+        function clearError(lessonNum) {
+            document.getElementById(`error${lessonNum}`).innerHTML = '';
+        }
+
+        function compileShader(lessonNum) {
+            if (!CanvasKit || !lessons[lessonNum]) return;
+
+            clearError(lessonNum);
+            
+            try {
+                const editor = document.getElementById(`editor${lessonNum}`);
+                const skslCode = editor.value;
+                
+                // 기존 셰이더 정리
+                if (lessons[lessonNum].shader) {
+                    lessons[lessonNum].shader.delete();
+                }
+
+                // SKSL 컴파일
+                const effect = CanvasKit.RuntimeEffect.Make(skslCode);
+                if (!effect) {
+                    throw new Error('SKSL 컴파일 실패');
+                }
+
+                lessons[lessonNum].shader = effect;
+                renderShader(lessonNum);
+                
+            } catch (error) {
+                showError(lessonNum, error.message);
+            }
+        }
+
+        function renderShader(lessonNum) {
+            const lesson = lessons[lessonNum];
+            if (!lesson.shader || !lesson.canvas) return;
+
+            try {
+                // uniform 설정 (해상도)
+                const uniforms = new Float32Array([300, 300]); // iResolution
+
+                const shaderInstance = lesson.shader.makeShader(uniforms);
+                const paint = new CanvasKit.Paint();
+                paint.setShader(shaderInstance);
+
+                lesson.canvas.clear(CanvasKit.WHITE);
+                lesson.canvas.drawRect(CanvasKit.LTRBRect(0, 0, 300, 300), paint);
+                lesson.surface.flush();
+
+                paint.delete();
+                shaderInstance.delete();
+                
+            } catch (error) {
+                showError(lessonNum, '렌더링 오류: ' + error.message);
+            }
+        }
+
+        // 색상 변형 예제
+        function tryColorVariation(lessonNum) {
+            const variations = [
+                'return half4(0.0, 1.0, 0.0, 1.0); // 초록색',
+                'return half4(0.0, 0.0, 1.0, 1.0); // 파란색',
+                'return half4(1.0, 1.0, 0.0, 1.0); // 노란색',
+                'return half4(1.0, 0.5, 0.0, 1.0); // 주황색',
+                'return half4(0.5, 0.0, 0.5, 1.0); // 보라색'
+            ];
+            
+            const randomColor = variations[Math.floor(Math.random() * variations.length)];
+            const editor = document.getElementById(`editor${lessonNum}`);
+            
+            editor.value = `half4 main(float2 fragCoord) {
+                // 다양한 색상을 시도해보세요!
+                ${randomColor}
+            }`;
+            
+            compileShader(lessonNum);
+        }
+
+        // 그라디언트 변형 예제
+        function tryGradientVariation(lessonNum) {
+            const variations = [
+                `uniform float2 iResolution;
+                half4 main(float2 fragCoord) {
+                    float2 uv = fragCoord / iResolution.xy;
+                    
+                    // 위에서 아래로 변하는 그라디언트
+                    float3 color = float3(0.0, uv.y, 1.0 - uv.y);
+                    
+                    return half4(color, 1.0);
+                }`,
+                                `uniform float2 iResolution;
+
+                half4 main(float2 fragCoord) {
+                    float2 uv = fragCoord / iResolution.xy;
+                    
+                    // 대각선 그라디언트
+                    float gradient = uv.x + uv.y;
+                    float3 color = float3(gradient, 0.5, 1.0 - gradient);
+                    
+                    return half4(color, 1.0);
+                }`,
+                `uniform float2 iResolution;
+
+                half4 main(float2 fragCoord) {
+                    float2 uv = fragCoord / iResolution.xy;
+                    
+                    // 원형 그라디언트
+                    float2 center = uv - 0.5;
+                    float dist = length(center);
+                    float3 color = float3(dist, 0.0, 1.0 - dist);
+                    
+                    return half4(color, 1.0);
+                }`
+            ];
+            
+            const randomGradient = variations[Math.floor(Math.random() * variations.length)];
+            const editor = document.getElementById(`editor${lessonNum}`);
+            editor.value = randomGradient;
+            compileShader(lessonNum);
+        }
+
+        // 에디터 이벤트 리스너
+        document.getElementById('editor1').addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                compileShader(1);
+            }
+        });
+
+        document.getElementById('editor2').addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                compileShader(2);
+            }
+        });
+
+        // 정리
+        window.addEventListener('beforeunload', () => {
+            Object.values(lessons).forEach(lesson => {
+                if (lesson && lesson.shader) {
+                    try {
+                        lesson.shader.delete();
+                    } catch (e) {
+                        console.warn('셰이더 정리 중 오류:', e);
+                    }
+                }
+                if (lesson && lesson.surface) {
+                    try {
+                        lesson.surface.delete();
+                    } catch (e) {
+                        console.warn('Surface 정리 중 오류:', e);
+                    }
+                }
+            });
+        });
+
+        // 초기화 시작
+        initCanvasKit();
+    </script>
+</body>
+</html>
