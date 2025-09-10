@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKSL 셰이더 교육 자료</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .lesson {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .lesson-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+        }
+
+        .lesson-title {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .lesson-description {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .lesson-content {
+            display: flex;
+            min-height: 500px;
+        }
+
+        .editor-section {
+            width: 50%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-section {
+            width: 50%;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid #e9ecef;
+        }
+
+        .section-header {
+            background: #495057;
+            color: white;
+            padding: 12px 20px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-editor {
+            flex: 1;
+            padding: 0;
+            border: none;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            outline: none;
+            resize: none;
+            padding: 20px;
+        }
+
+        .preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .preview-canvas {
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #343a40;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+
+        .btn.success {
+            background: #28a745;
+        }
+
+        .btn.success:hover {
+            background: #1e7e34;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px 20px;
+            border-left: 4px solid #dc3545;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+
+        .loading {
+            text-align: center;
+            color: #6c757d;
+            padding: 40px;
+            font-style: italic;
+        }
+
+        .key-concepts {
+            background: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px 20px;
+            margin: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .key-concepts h4 {
+            color: #0056b3;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        .key-concepts ul {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .key-concepts li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .lesson-content {
+                flex-direction: column;
+            }
+            
+            .editor-section, .preview-section {
+                width: 100%;
+            }
+
+            .preview-section {
+                border-left: none;
+                border-top: 2px solid #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1> SKSL 셰이더 교육 자료</h1>
+        <p>단계별로 배우는 셰이더 프로그래밍</p>
+    </div>
+
+    <div class="container">
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title">그라디언트 만들기</div>
+                <div class="lesson-description">
+                    이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <br>
+                    <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고,<br> 
+                    이를 정규화하여 0.0에서 1.0 사이의 값으로 변환합니다.
+                </div>
+            </div>
+            
+            <div class="key-concepts">
+                <h4> 핵심 개념</h4>
+                <ul>
+                    <li><strong>fragCoord</strong>: 현재 픽셀의 화면 좌표 (예: 150, 200)</li>
+                    <li><strong>iResolution</strong>: 화면 해상도 (너비, 높이)</li>
+                    <li><strong>uv 좌표</strong>: 정규화된 좌표 (0.0~1.0 범위)</li>
+                    <li><strong>그라디언트</strong>: 위치에 따라 색상이 점진적으로 변하는 효과</li>
+                </ul>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor1">
+
+uniform float2 iResolution;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution.xy;    
+    float3 color = float3(uv.x, 0.0, 1.0 - uv.x);    
+    return half4(color, 1.0);
+}                   
+
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(1)">실행</button>                     
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error1"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="container">
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title">그라디언트 만들기</div>
+                <div class="lesson-description">
+                    이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <br>
+                    <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고,<br> 
+                    이를 정규화하여 0.0에서 1.0 사이의 값으로 변환합니다.
+                </div>
+            </div>
+            
+            <div class="key-concepts">
+                <h4> 핵심 개념</h4>
+                <ul>
+                    <li><strong>fragCoord</strong>: 현재 픽셀의 화면 좌표 (예: 150, 200)</li>
+                    <li><strong>iResolution</strong>: 화면 해상도 (너비, 높이)</li>
+                    <li><strong>uv 좌표</strong>: 정규화된 좌표 (0.0~1.0 범위)</li>
+                    <li><strong>그라디언트</strong>: 위치에 따라 색상이 점진적으로 변하는 효과</li>
+                </ul>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor2">
+
+uniform float2 iResolution;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution.xy;    
+    float3 color = float3(uv.x, 0.0, 1.0 - uv.x);    
+    return half4(color, 1.0);
+}                   
+
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(2)">실행</button>                     
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error2"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading2">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas2" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/canvaskit.min.js"></script>
+    <script src="shader-tutorial.js"></script>
+</body>
+</html>
