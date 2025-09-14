@@ -1,6 +1,8 @@
 let CanvasKit = null;
 const lessons = {};
 const maxLessons = 2;
+const width = 300;
+const height = 300;
 
 // CanvasKit 초기화
 async function initCanvasKit() {
@@ -41,13 +43,54 @@ function clearError(lessonNum) {
     document.getElementById(`error${lessonNum}`).innerHTML = '';
 }
 
+
+function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
+    return `
+    uniform float2 iResolution;
+    half4 main(float2 fragCoord) {
+        float2 uv = fragCoord / iResolution;   // 0 ~ 1 좌표
+            
+        // skia y축이 아래로 향하므로 y축 반전
+        // float2 p = uv * 2.0 - 1.0;
+        float2 p = float2(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0);        
+        // 좌표계 범위: x: -1 ~ 1, y: -1 ~ 1        
+        ${funcBody}
+
+        float lineThickness = 0.05;
+        float d = abs(p.y - y);
+        float line = 1.0 - smoothstep(0.0, lineThickness, d);
+
+        // 좌표축
+        float ax = 1.0 - smoothstep(0.0, 0.05, abs(p.x));
+        float ay = 1.0 - smoothstep(0.0, 0.05, abs(p.y));
+
+        // 배경색
+        float3 col = float3(0.01, 0.1, 0.11);
+
+        // 축 색 적용
+        col = mix(col, float3(0.3,0.3,0.3), ax + ay);
+
+        // 그래프 색 적용
+        col = mix(col, float3(1.0,0.2,0.2), line);
+
+        return half4(col, 1.0);
+    }`;
+}
+
 function compileShader(lessonNum) {
     if (!CanvasKit || !lessons[lessonNum]) return;
+    // dlgmlals3
+    console.log("compileShader", lessonNum);
 
     clearError(lessonNum);
 
     const editor = document.getElementById(`editor${lessonNum}`);
-    const skslCode = editor.value ?? '';
+    skslCode = editor.value ?? '';
+
+    // 그래프 코드 스터디를 위한 코드.
+    if (lessonNum == 1) {
+        skslCode = makeGraphShader(editor.value);
+    }
 
   // 기존 셰이더 정리
     if (lessons[lessonNum].shader) {
@@ -77,14 +120,14 @@ function renderShader(lessonNum) {
 
     try {
         // uniform 설정 (해상도)
-        const uniforms = new Float32Array([300, 300]); // iResolution
+        const uniforms = new Float32Array([width, height]); // iResolution
 
         const shaderInstance = lesson.shader.makeShader(uniforms);
         const paint = new CanvasKit.Paint();
         paint.setShader(shaderInstance);
 
         lesson.canvas.clear(CanvasKit.WHITE);
-        lesson.canvas.drawRect(CanvasKit.LTRBRect(0, 0, 300, 300), paint);
+        lesson.canvas.drawRect(CanvasKit.LTRBRect(0, 0, width, height), paint);
         lesson.surface.flush();
 
         //paint.delete();

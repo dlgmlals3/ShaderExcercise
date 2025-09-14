@@ -227,21 +227,41 @@
     <div class="container">
         <div class="lesson">
             <div class="lesson-header">
-                <div class="lesson-title">그라디언트 만들기</div>
+                <div class="lesson-title">그래프 그려보기</div>
                 <div class="lesson-description">
-                    이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <br>
-                    <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고,<br> 
-                    이를 정규화하여 0.0에서 1.0 사이의 값으로 변환합니다.
+                    여러가지 그래프를 그려 봅니다. <br>      
+                    float y 값에 원하는 수식을 넣어 보세요 <br>
+                    x 값은 p.x를 사용 합니다. <br>
+                    이해를 돕기 위해 y 값은 좌표계를 위로 갈수록 커지도록 변환 <br>
+                    <code> float2 p = uv * 2.0 - 1.0;</code><br>
+                    정규화 : x: -1 ~ 1, y: -1 ~ 1 <br>
                 </div>
             </div>
             
             <div class="key-concepts">
-                <h4> 핵심 개념</h4>
+                <h4> 자주 사용하는 그래프 </h4>
                 <ul>
-                    <li><strong>fragCoord</strong>: 현재 픽셀의 화면 좌표 (예: 150, 200)</li>
-                    <li><strong>iResolution</strong>: 화면 해상도 (너비, 높이)</li>
-                    <li><strong>uv 좌표</strong>: 정규화된 좌표 (0.0~1.0 범위)</li>
-                    <li><strong>그라디언트</strong>: 위치에 따라 색상이 점진적으로 변하는 효과</li>
+                    <li><strong>1. 직선 : <code> float y = p.x; </code></strong></li>
+                    <li><strong>2. 사인 곡선 : <code>float y = sin(p.x);</code></strong></li>
+                    <li><strong>3. Fract 곡선 (톱니파 모양) : <code> float y = fract(sin(p.x)); </code></strong> <br>
+                    <a href="https://thebookofshaders.com/glossary/?search=fract"> Fract 사용법</a> <br>
+                    fract(-1.3) = -2.0 + 0.7 <br>
+                    fract(1.3) = 1.0 + 0.3 <br>
+                    </li>
+                    <li><strong>4. Step (계단 그래프) : <code> float y = step(0.5, p.x); </code></strong> <br>
+                    p *= 2.;  <br>            
+                    float y = step(0.8, p.x); <br>
+                    y -= step(1.2, p.x); <br>
+                    </li>
+                    <li><strong>5. 가우시안 곡선 : <code> float y = exp(-p.x * p.x); </code></strong></li>
+                    <li><strong>5. 절대값 곡선 (대칭) : <code> float y = abs(p.x); </code></strong></li>
+                    <li><strong>6. 제곱 곡선 : <code> float y = p.x * p.x; </code></strong></li>
+                    <li><strong>7. 제곱근 : <code> float y = sqrt(p.x); </code></strong></li>
+                    <li><strong>8. 코사인 : <code> float y = cos(p.x); </code></strong></li>
+                    <li><strong>9. 탄젠트 : <code> float y = tan(p.x); </code></strong></li>
+                    <li><strong>10. Traiangular Wave (지그재그) <code> float y = abs(fract(p.x) * 2.0 - 1.0); </code></strong></li>
+                    <li><strong> TIP <br>
+                        <code> 좌표계 확대 방법 p *= 3.14; </code></strong></li> <br>
                 </ul>
             </div>
 
@@ -250,12 +270,7 @@
                     <div class="section-header">SKSL 코드</div>
                     <textarea class="code-editor" id="editor1">
 
-uniform float2 iResolution;
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution.xy;    
-    float3 color = float3(uv.x, 0.0, 1.0 - uv.x);    
-    return half4(color, 1.0);
-}                   
+float y = p.x;           
 
                     </textarea>
                     <div class="controls">
@@ -283,7 +298,7 @@ half4 main(float2 fragCoord) {
                 <div class="lesson-description">
                     이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <br>
                     <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고,<br> 
-                    이를 정규화하여 0.0에서 1.0 사이의 값으로 변환합니다.
+                    정규화 : xy : 0 ~ 1<br>
                 </div>
             </div>
             
