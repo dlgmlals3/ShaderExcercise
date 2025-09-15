@@ -234,7 +234,7 @@
                     x 값은 p.x를 사용 합니다. <br>
                     이해를 돕기 위해 y 값은 좌표계를 위로 갈수록 커지도록 변환 <br>
                     <code> float2 p = uv * 2.0 - 1.0;</code><br>
-                    정규화 : x: -1 ~ 1, y: -1 ~ 1 <br>
+                    정규화 : xy : -1 ~ 1<br>
                 </div>
             </div>
             
@@ -253,13 +253,14 @@
                     float y = step(0.8, p.x); <br>
                     y -= step(1.2, p.x); <br>
                     </li>
+                    <li><strong>4.1. SmoothStep <code> float y = smoothstep(0.0, 1.0, p.x); </code></strong></li>
                     <li><strong>5. 가우시안 곡선 : <code> float y = exp(-p.x * p.x); </code></strong></li>
                     <li><strong>5. 절대값 곡선 (대칭) : <code> float y = abs(p.x); </code></strong></li>
                     <li><strong>6. 제곱 곡선 : <code> float y = p.x * p.x; </code></strong></li>
                     <li><strong>7. 제곱근 : <code> float y = sqrt(p.x); </code></strong></li>
                     <li><strong>8. 코사인 : <code> float y = cos(p.x); </code></strong></li>
                     <li><strong>9. 탄젠트 : <code> float y = tan(p.x); </code></strong></li>
-                    <li><strong>10. Traiangular Wave (지그재그) <code> float y = abs(fract(p.x) * 2.0 - 1.0); </code></strong></li>
+                    <li><strong>10. Traiangular Wave (지그재그) <code> float y = abs(fract(p.x) * 2.0 - 1.0); </code></strong></li>                    
                     <li><strong> TIP <br>
                         <code> 좌표계 확대 방법 p *= 3.14; </code></strong></li> <br>
                 </ul>
@@ -294,36 +295,127 @@ float y = p.x;
     <div class="container">
         <div class="lesson">
             <div class="lesson-header">
-                <div class="lesson-title">그라디언트 만들기</div>
+                <div class="lesson-title">패턴 만들기</div>
                 <div class="lesson-description">
-                    이제 픽셀의 위치를 이용해서 그라디언트를 만들어봅시다! <br>
-                    <code>fragCoord</code>는 현재 픽셀의 화면 좌표이고,<br> 
-                    정규화 : xy : 0 ~ 1<br>
+                    패턴을 만들아보자. <br>                    
+                    정규화 : xy : 0 ~ 1 <br>
                 </div>
             </div>
             
             <div class="key-concepts">
                 <h4> 핵심 개념</h4>
                 <ul>
-                    <li><strong>fragCoord</strong>: 현재 픽셀의 화면 좌표 (예: 150, 200)</li>
+                    <li><strong>정규화</strong><br>
+                        <pre><code>
+float2 uv = fragCoord / iResolution.xy;
+                        </code></pre>
+                    </li>
+                        <li><strong>원을 만드는 코드 1 </strong>
+                        <pre><code>
+uniform float2 iResolution;
+float circle(in vec2 _st, in float _radius) { 
+    vec2 l = _st - vec2(0.5);
+    return 1. - step(_radius, dot(l, l) * 4.0);
+}
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution.xy;    
+    float color = circle(uv, 0.3);
+    return half4(color, color, color, 1.0);
+}                   
+                        </code></pre>
+                    </li>
+
+                    <li><strong>원을 만드는 코드 2 </strong>
+                        <pre><code>
+uniform float2 iResolution;
+float circle(in vec2 _st, in float _radius) { 
+    vec2 l = _st - vec2(0.5);
+    return 1. - smoothstep(_radius - (_radius * 0.01), _radius + (_radius * 0.01), dot(l, l) * 4.0);
+}
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution.xy;    
+    float color = circle(uv, 0.3);
+    return half4(color, color, color, 1.0);
+}                   
+                        </code></pre>
+                    </li>
+
+                    <li><strong>원을 만드는 코드 3 </strong>
+                        <pre><code>
+uniform float2 iResolution;
+float circle(in vec2 _st, in float _radius) {     
+    return 1. - smoothstep(_radius - (_radius * 0.01), _radius + (_radius * 0.01), dot(_st, _st) * 4.0);
+}
+half4 main(float2 fragCoord) {
+    float2 uv = (fragCoord / iResolution.xy) - .5;    
+    float color = circle(uv, 0.3);
+    return half4(color, color, color, 1.0);
+}                   
+                        </code></pre>
+                    </li>
+
+                    <li><strong>패턴 만들기 1 </strong>
+                        <pre><code>
+uniform float2 iResolution;
+half4 main(float2 fragCoord) {
+    float2 uv = (fragCoord / iResolution.xy);    
+    uv *= 3.0;
+    uv = fract(uv);
+    float3 color = float3(uv, 0.0);
+    return half4(color, 1.0);
+}                   
+                        </code></pre>
+                    </li>
+
+                    <li><strong>패턴 만들기 2 </strong>
+                        <pre><code>
+vec2 tile(vec2 _st, float _zoom){
+    _st *= _zoom;
+    return fract(_st);
+}
+
+float box(vec2 _st, vec2 _size, float _smoothEdges){
+    _size = vec2(0.5) - _size * 0.5;
+    vec2 aa = vec2(_smoothEdges * 0.5);
+    vec2 uv = smoothstep(_size, _size + aa, _st);
+    uv *= smoothstep(_size, _size + aa, vec2(1.0) - _st);
+    return uv.x * uv.y;
+}     
+
+uniform float2 iResolution;    
+half4 main(float2 fragCoord) {
+    vec2 st = fragCoord.xy / iResolution.xy;
+    vec3 color = vec3(0.0);
+
+    // Divide the space in 4
+    st = tile(st,4.);
+
+    // Draw a square
+    color = vec3(box(st,vec2(0.7),0.01));
+    // color = vec3(st,0.0);
+    return vec4(color,1.0);
+}
+                        </code></pre>
+                    </li>
+
+
                     <li><strong>iResolution</strong>: 화면 해상도 (너비, 높이)</li>
                     <li><strong>uv 좌표</strong>: 정규화된 좌표 (0.0~1.0 범위)</li>
                     <li><strong>그라디언트</strong>: 위치에 따라 색상이 점진적으로 변하는 효과</li>
                 </ul>
             </div>
 
+
+
+
             <div class="lesson-content">
                 <div class="editor-section">
                     <div class="section-header">SKSL 코드</div>
                     <textarea class="code-editor" id="editor2">
-
 uniform float2 iResolution;
 half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution.xy;    
-    float3 color = float3(uv.x, 0.0, 1.0 - uv.x);    
-    return half4(color, 1.0);
-}                   
-
+    return half4(1.0);
+}
                     </textarea>
                     <div class="controls">
                         <button class="btn" onclick="compileShader(2)">실행</button>                     

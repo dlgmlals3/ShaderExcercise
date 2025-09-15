@@ -133,6 +133,7 @@ function renderShader(lessonNum) {
         //paint.delete();
         shaderInstance.delete();
         
+        
     } catch (error) {
         showError(lessonNum, '렌더링 오류: ' + error.message);
     }
