@@ -9,11 +9,11 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p>Chapter 1. 복습하면서 감을 익히자 !!! </p>
+        <p>단계별로 배우는 셰이더 프로그래밍</p>
 
         <nav class="chapter-nav">
-            <a href="index.html" class="chapter-btn active">Chapter 1. Graph 그려보기 </a>
-            <a href="chapter2.html" class="chapter-btn">Chapter 2. ???? </a>
+            <a href="index.html" class="chapter-btn">Chapter 1. 복습</a>
+            <a href="chapter2.html" class="chapter-btn active">Chapter 2. ???? </a>
             <a href="chapter3.html" class="chapter-btn">Chapter 3. ???? </a>
         </nav>
     </div>
@@ -25,14 +25,16 @@
                 <div class="lesson-description">
                     여러가지 그래프를 그려 봅니다. <br>      
                     float y 값에 원하는 수식을 넣어 보세요 <br>
-                    편의를 위해 y 값만 넣어주면 그래프로 그려준다. <br>                    
-                    정규화 영역 : xy : -1 ~ 1<br>
+                    x 값은 p.x를 사용 합니다. <br>
+                    이해를 돕기 위해 y 값은 좌표계를 위로 갈수록 커지도록 변환 <br>
+                    <code> float2 p = uv * 2.0 - 1.0;</code><br>
+                    정규화 : xy : -1 ~ 1<br>
                 </div>
             </div>
             
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts1')">
-                    <h4> 자주 사용하는 그래프</h4>
+                    <h4>📈 자주 사용하는 그래프</h4>
                     <span class="toggle-icon" id="icon-concepts1">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts1">
@@ -150,14 +152,14 @@ float y = p.x;
 
         <div class="lesson">
             <div class="lesson-header">
-                <div class="lesson-title"> 패턴 만들기</div>
+                <div class="lesson-title">🎨 패턴 만들기</div>
                 <div class="lesson-description">
-                    <h3> 학습목표</h3>
+                    <h3>🎯 학습목표</h3>
                     dot, step, smoothstep, fract, mod 함수 사용해보기<br>
                     분석방법을 따라해본다.<br>
-                    <h3> 왠만하면 분석하지말고 함수 가져다 쓰자.</h3><br><br>
+                    <h3>⚡ 왠만하면 분석하지말고 함수 가져다 쓰자.</h3><br><br>
 
-                    <h3> 분석 방법</h3>                        
+                    <h3>🔍 분석 방법</h3>                        
                     1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
                     2) 코드 분해해서 주석 처리<br>
                     3) 간단한 함수로 바꾸어 보기 (smoothstep → step)<br>
@@ -234,7 +236,7 @@ half4 main(float2 fragCoord) {
                     <h4> 박스 만들기 </h4>
                     <span class="toggle-icon" id="icon-concepts3">▼</span>
                 </div>
-                <div class="concepts-content" id="concepts3">
+                <div class="concepts-content collapsed" id="concepts3">
                     <ul>
                         <li><strong>패턴 만들기 1</strong>
                             <div class="code-example">
@@ -275,7 +277,7 @@ half4 main(float2 fragCoord) {
                             </div>
                         </li>
 
-                        <li><strong> 벡터 연산 팁</strong>
+                        <li><strong>💡 벡터 연산 팁</strong>
                             <div class="code-example">
                                 <code>vec2(a, b) * vec2(c, d) = vec2(a * c, b * d);
 dot(vec2(a, b), vec2(c, d)) = a * c + b * d;</code>
@@ -290,7 +292,7 @@ dot(vec2(a, b), vec2(c, d)) = a * c + b * d;</code>
                     <h4> 터틀 패턴 만들기 </h4>
                     <span class="toggle-icon" id="icon-concepts4">▼</span>
                 </div>
-                <div class="concepts-content" id="concepts4">
+                <div class="concepts-content collapsed" id="concepts4">
                     <ul>
                         <li><strong>터틀 패턴 만들기</strong>                            
                             <div class="code-example">
@@ -425,26 +427,11 @@ half4 main(float2 fragCoord) {
         }
 
         // 초기 상태 설정
-        // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', function() {
-            // concepts2, concepts3만 닫고 싶다면:
-            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4'];
-            
-            sectionsToClose.forEach(conceptsId => {
-                const content = document.getElementById(conceptsId);
-                const icon = document.getElementById(`icon-${conceptsId}`);
-                const header = document.querySelector(`[onclick="toggleConcepts('${conceptsId}')"]`);
-                
-                if (content) {
-                    content.classList.add('collapsed');
-                    content.style.maxHeight = '0';
-                }
-                if (icon) {
-                    icon.textContent = '▼';
-                }
-                if (header) {
-                    header.classList.add('closed');
-                }
+            // 모든 concepts는 처음에 펼쳐져 있음
+            const conceptsContents = document.querySelectorAll('.concepts-content');
+            conceptsContents.forEach(content => {
+                content.style.maxHeight = content.scrollHeight + 'px';
             });
         });
 

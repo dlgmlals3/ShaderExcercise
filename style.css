@@ -1,0 +1,414 @@
+/* SKSL 셰이더 교육 자료 - 스타일시트 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #333;
+    min-height: 100vh;
+}
+
+.header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    color: #333;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.header p {
+    color: #666;
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+}
+
+.chapter-nav {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.chapter-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: #e2e8f0;
+    border: 2px solid #4a5568;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(45, 55, 72, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.chapter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.chapter-btn:hover {
+    background: linear-gradient(135deg, #4a5568 0%, #667eea 100%);
+    border-color: #667eea;
+    transform: translateY(-3px);
+    color: #ffffff;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.chapter-btn:hover::before {
+    left: 100%;
+}
+
+.chapter-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #764ba2;
+    color: #ffffff;
+    font-weight: 600;
+    box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+    transform: translateY(-1px);
+}
+
+.chapter-btn.active::after {
+    content: '●';
+    margin-left: 8px;
+    font-size: 8px;
+    opacity: 0.8;
+}
+
+.chapter {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.lesson {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 30px;
+}
+
+.lesson-title {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.lesson-description {
+    font-size: 1rem;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+.lesson-content {
+    display: flex;
+    min-height: 500px;
+}
+
+.editor-section {
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-section {
+    width: 50%;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    border-left: 2px solid #e9ecef;
+}
+
+.section-header {
+    background: #495057;
+    color: white;
+    padding: 12px 20px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.code-editor {
+    flex: 1;
+    padding: 0;
+    border: none;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    outline: none;
+    resize: none;
+    padding: 20px;
+}
+
+.preview-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+}
+
+.preview-canvas {
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.controls {
+    padding: 15px 20px;
+    background: #343a40;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn {
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+}
+
+.btn.success {
+    background: #28a745;
+}
+
+.btn.success:hover {
+    background: #1e7e34;
+}
+
+.error {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 15px 20px;
+    border-left: 4px solid #dc3545;
+    font-family: monospace;
+    font-size: 12px;
+    white-space: pre-wrap;
+}
+
+.loading {
+    text-align: center;
+    color: #6c757d;
+    padding: 40px;
+    font-style: italic;
+}
+
+.key-concepts {
+    background: #e7f3ff;
+    border-left: 4px solid #007bff;
+    margin: 20px;
+    border-radius: 0 8px 8px 0;
+}
+
+.concepts-header {
+    padding: 15px 20px;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 123, 255, 0.05);
+    transition: background-color 0.2s;
+}
+
+.concepts-header:hover {
+    background: rgba(0, 123, 255, 0.1);
+}
+
+.concepts-header h4 {
+    color: #0056b3;
+    font-size: 1rem;
+    margin: 0;
+}
+
+.toggle-icon {
+    color: #0056b3;
+    font-size: 1.2rem;
+    font-weight: bold;
+    transition: transform 0.2s;
+}
+
+.concepts-content {
+    padding: 0 20px 15px 20px;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+}
+
+.concepts-content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.concepts-content ul {
+    margin-left: 20px;
+    line-height: 1.6;
+}
+
+.concepts-content li {
+    margin-bottom: 5px;
+}
+
+.code-example {
+    background: #2d3748;
+    border-radius: 6px;
+    padding: 15px;
+    margin: 10px 0;
+    overflow-x: auto;
+}
+
+.code-example code {
+    color: #e2e8f0;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre;
+}
+
+.collapsible-code {
+    margin: 10px 0;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.code-header {
+    background: #4a5568;
+    color: white;
+    padding: 8px 15px;
+    cursor: pointer;
+    user-select: none;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+
+.code-header:hover {
+    background: #2d3748;
+}
+
+.code-toggle {
+    font-size: 12px;
+    opacity: 0.8;
+}
+
+.code-content {
+    max-height: 300px;
+    overflow-y: auto;
+    transition: max-height 0.3s ease-out;
+}
+
+.code-content.collapsed {
+    max-height: 0;
+    overflow: hidden;
+}
+
+/* 페이지 네비게이션 푸터 */
+.navigation-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 30px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+.prev-chapter-btn,
+.next-chapter-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.prev-chapter-btn:hover,
+.next-chapter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.next-chapter-btn {
+    margin-left: auto;
+}
+
+@media (max-width: 768px) {
+    .navigation-footer {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .prev-chapter-btn,
+    .next-chapter-btn {
+        width: 100%;
+        margin-left: 0;
+    }
+}
