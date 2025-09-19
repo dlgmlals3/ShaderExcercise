@@ -1,4 +1,4 @@
-/* SKSL 셰이더 교육 자료 - 스타일시트 */
+/* SKSL 셰이더 교육 자료 - 다크 테마 스타일시트 */
 * {
     margin: 0;
     padding: 0;
@@ -7,27 +7,28 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: #333;
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #e2e8f0;
     min-height: 100vh;
 }
 
 .header {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(26, 32, 44, 0.95);
     backdrop-filter: blur(10px);
     padding: 20px 0;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #4a5568;
 }
 
 .header h1 {
-    color: #333;
+    color: #f7fafc;
     font-size: 2.5rem;
     margin-bottom: 10px;
 }
 
 .header p {
-    color: #666;
+    color: #a0aec0;
     font-size: 1.1rem;
     margin-bottom: 20px;
 }
@@ -41,7 +42,7 @@ body {
 
 .chapter-btn {
     padding: 12px 24px;
-    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
     color: #e2e8f0;
     border: 2px solid #4a5568;
     border-radius: 25px;
@@ -51,7 +52,7 @@ body {
     text-decoration: none;
     display: inline-block;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(45, 55, 72, 0.3);
+    box-shadow: 0 4px 15px rgba(26, 32, 44, 0.5);
     position: relative;
     overflow: hidden;
 }
@@ -68,7 +69,7 @@ body {
 }
 
 .chapter-btn:hover {
-    background: linear-gradient(135deg, #4a5568 0%, #667eea 100%);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-color: #667eea;
     transform: translateY(-3px);
     color: #ffffff;
@@ -117,16 +118,17 @@ body {
 }
 
 .lesson {
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(45, 55, 72, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 20px;
     margin-bottom: 40px;
     overflow: hidden;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border: 1px solid #4a5568;
 }
 
 .lesson-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #303b6e 0%, #764ba2 100%);
     color: white;
     padding: 20px 30px;
 }
@@ -135,12 +137,23 @@ body {
     font-size: 1.5rem;
     margin-bottom: 10px;
     font-weight: 600;
+    border-left: 4px solid #4fd1c7;
+    padding-left: 15px;
+    margin: 20px 0;
+    color: #f7fafc;
 }
 
 .lesson-description {
-    font-size: 1rem;
-    line-height: 1.6;
-    opacity: 0.9;
+    background: rgba(196, 196, 196, 0.8);
+
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    margin: 15px 0;
+    border: 1px solid #4a5568;
+    color: #ffffff;
+    border-left: 4px solid #4fd1c7;
+    background: linear-gradient(135deg, rgba(168, 228, 223, 0.1) 0%, rgba(168, 175, 204, 0.1) 100%);
 }
 
 .lesson-content {
@@ -156,20 +169,21 @@ body {
 
 .preview-section {
     width: 50%;
-    background: #f8f9fa;
+    background: #2d3748;
     display: flex;
     flex-direction: column;
-    border-left: 2px solid #e9ecef;
+    border-left: 2px solid #4a5568;
 }
 
 .section-header {
-    background: #495057;
-    color: white;
+    background: #1a202c;
+    color: #e2e8f0;
     padding: 12px 20px;
     font-weight: 500;
     font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 1px;
+    border-bottom: 1px solid #4a5568;
 }
 
 .code-editor {
@@ -179,8 +193,8 @@ body {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 14px;
     line-height: 1.5;
-    background: #1e1e1e;
-    color: #d4d4d4;
+    background: #1a202c;
+    color: #e2e8f0;
     outline: none;
     resize: none;
     padding: 20px;
@@ -192,27 +206,28 @@ body {
     justify-content: center;
     align-items: center;
     padding: 20px;
-    background: #f8f9fa;
+    background: #2d3748;
 }
 
 .preview-canvas {
-    border: 2px solid #dee2e6;
+    border: 2px solid #4a5568;
     border-radius: 12px;
-    background: white;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background: #1a202c;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .controls {
     padding: 15px 20px;
-    background: #343a40;
+    background: #1a202c;
     display: flex;
     gap: 10px;
     align-items: center;
+    border-top: 1px solid #4a5568;
 }
 
 .btn {
     padding: 8px 16px;
-    background: #007bff;
+    background: #667eea;
     color: white;
     border: none;
     border-radius: 6px;
@@ -223,40 +238,44 @@ body {
 }
 
 .btn:hover {
-    background: #0056b3;
+    background: #5a67d8;
     transform: translateY(-1px);
 }
 
 .btn.success {
-    background: #28a745;
+    background: #48bb78;
 }
 
 .btn.success:hover {
-    background: #1e7e34;
+    background: #38a169;
 }
 
 .error {
-    background: #f8d7da;
-    color: #721c24;
+    background: rgba(254, 178, 178, 0.1);
+    color: #fed7d7;
     padding: 15px 20px;
-    border-left: 4px solid #dc3545;
+    border-left: 4px solid #f56565;
     font-family: monospace;
     font-size: 12px;
     white-space: pre-wrap;
+    border: 1px solid rgba(245, 101, 101, 0.3);
+    border-radius: 6px;
+    margin: 10px;
 }
 
 .loading {
     text-align: center;
-    color: #6c757d;
+    color: #a0aec0;
     padding: 40px;
     font-style: italic;
 }
 
 .key-concepts {
-    background: #e7f3ff;
-    border-left: 4px solid #007bff;
+    background: rgba(102, 126, 234, 0.1);
+    border-left: 4px solid #667eea;
     margin: 20px;
     border-radius: 0 8px 8px 0;
+    border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .concepts-header {
@@ -266,22 +285,22 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(0, 123, 255, 0.05);
+    background: rgba(102, 126, 234, 0.05);
     transition: background-color 0.2s;
 }
 
 .concepts-header:hover {
-    background: rgba(0, 123, 255, 0.1);
+    background: rgba(102, 126, 234, 0.15);
 }
 
 .concepts-header h4 {
-    color: #0056b3;
+    color: #90cdf4;
     font-size: 1rem;
     margin: 0;
 }
 
 .toggle-icon {
-    color: #0056b3;
+    color: #90cdf4;
     font-size: 1.2rem;
     font-weight: bold;
     transition: transform 0.2s;
@@ -291,6 +310,7 @@ body {
     padding: 0 20px 15px 20px;
     overflow: hidden;
     transition: max-height 0.3s ease-out, padding 0.3s ease-out;
+    color: #cbd5e0;
 }
 
 .concepts-content.collapsed {
@@ -309,11 +329,12 @@ body {
 }
 
 .code-example {
-    background: #2d3748;
+    background: #1a202c;
     border-radius: 6px;
     padding: 15px;
     margin: 10px 0;
     overflow-x: auto;
+    border: 1px solid #4a5568;
 }
 
 .code-example code {
@@ -326,14 +347,15 @@ body {
 
 .collapsible-code {
     margin: 10px 0;
-    border: 1px solid #cbd5e0;
+    border: 1px solid #4a5568;
     border-radius: 6px;
     overflow: hidden;
+    background: #2d3748;
 }
 
 .code-header {
-    background: #4a5568;
-    color: white;
+    background: #1a202c;
+    color: #e2e8f0;
     padding: 8px 15px;
     cursor: pointer;
     user-select: none;
@@ -343,6 +365,7 @@ body {
     justify-content: space-between;
     align-items: center;
     transition: background-color 0.2s;
+    border-bottom: 1px solid #4a5568;
 }
 
 .code-header:hover {
@@ -374,6 +397,7 @@ body {
     background: rgba(102, 126, 234, 0.1);
     border-radius: 15px;
     margin-top: 20px;
+    border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .prev-chapter-btn,

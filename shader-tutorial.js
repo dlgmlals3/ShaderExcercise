@@ -1,6 +1,6 @@
 let CanvasKit = null;
 const lessons = {};
-const maxLessons = 2;
+const maxLessons = 5;
 const width = 300;
 const height = 300;
 
@@ -13,20 +13,34 @@ async function initCanvasKit() {
 
         // 각 레슨 초기화
         for (let i = 1; i <= maxLessons; i++) {
-            const canvas = document.getElementById(`canvas${i}`);
-            const loading = document.getElementById(`loading${i}`);            
-            const surface = CanvasKit.MakeCanvasSurface(`canvas${i}`);
-            if (surface) {
-                lessons[i] = {
-                    surface: surface,
-                    canvas: surface.getCanvas()
-                };
+            try {
+                const canvas = document.getElementById(`canvas${i}`);
+                const loading = document.getElementById(`loading${i}`);
                 
-                loading.style.display = 'none';
-                canvas.style.display = 'block';
+                // 요소가 존재하지 않으면 스킵
+                if (!canvas || !loading) {
+                    console.warn(`레슨 ${i}: 필요한 DOM 요소가 없습니다`);
+                    continue;
+                }
                 
-                // 초기 컴파일
-                compileShader(i);
+                const surface = CanvasKit.MakeCanvasSurface(`canvas${i}`);
+                if (surface) {
+                    lessons[i] = {
+                        surface: surface,
+                        canvas: surface.getCanvas()
+                    };
+                    
+                    loading.style.display = 'none';
+                    canvas.style.display = 'block';
+                    
+                    // 초기 컴파일
+                    compileShader(i);
+                } else {
+                    console.error(`레슨 ${i}: 캔버스 surface 생성 실패`);
+                }
+            } catch (error) {
+                console.error(`레슨 ${i} 초기화 실패:`, error);
+                // 실패해도 다음 레슨 초기화 계속 진행
             }
         }
     } catch (error) {
@@ -49,11 +63,14 @@ function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
     uniform float2 iResolution;
     half4 main(float2 fragCoord) {
         float2 uv = fragCoord / iResolution;   // 0 ~ 1 좌표
-            
+        uv.y *= iResolution.y / iResolution.x;
+
         // skia y축이 아래로 향하므로 y축 반전
         // float2 p = uv * 2.0 - 1.0;
         float2 p = float2(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0);        
-        // 좌표계 범위: x: -1 ~ 1, y: -1 ~ 1        
+        // 좌표계 범위: x: -1 ~ 1, y: -1 ~ 1     
+        
+        
         ${funcBody}
 
         float lineThickness = 0.05;

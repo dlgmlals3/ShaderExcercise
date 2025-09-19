@@ -9,30 +9,36 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p>Chapter 1. 복습하면서 감을 익히자 !!! </p>
+        <p>Chapter 1. 주요 함수 및 기본 도형 그리기 </p>
 
         <nav class="chapter-nav">
-            <a href="index.html" class="chapter-btn active">Chapter 1. Graph 그려보기 </a>
-            <a href="chapter2.html" class="chapter-btn">Chapter 2. ???? </a>
-            <a href="chapter3.html" class="chapter-btn">Chapter 3. ???? </a>
+            <a href="index.html" class="chapter-btn active">Chapter 1. 주요 함수 및 기본 도형 그리기 </a>
+            <a href="chapter2.html" class="chapter-btn">Chapter 2. 랜덤 함수 및 이미지 샘플링 </a>
+            <a href="chapter3.html" class="chapter-btn">Chapter 3. 이미지 활용 알고리즘 </a>
         </nav>
     </div>
 
     <div class="container">
         <div class="lesson">
             <div class="lesson-header">
-                <div class="lesson-title"> 그래프 그려보기</div>
+                <div class="lesson-title"> 자주 사용하는 함수를 사용해보자. </div>
                 <div class="lesson-description">
-                    여러가지 그래프를 그려 봅니다. <br>      
-                    float y 값에 원하는 수식을 넣어 보세요 <br>
-                    편의를 위해 y 값만 넣어주면 그래프로 그려준다. <br>                    
-                    정규화 영역 : xy : -1 ~ 1<br>
+                    <h3> 학습 목표</h3>
+                    step, smoothstep, fract, mod, abs, 제곱, sqrt, sin, cos, tan, exp 그래프를 손으로 그려볼 수 있다. <br><br>
+
+                    자주 사용하는 함수를 연습하기 위해 그래프를 그려 봅니다. <br>      
+                    그래프 정규화 영역은 -1 ~ 1 입니다. <br>
+                    float y 값에 원하는 수식을 넣어 보세요 <br><br>
+                    x 값은 p.x입니다.<br>                    
+                    그리고 함수를 참조하는 Document 입니다. 이것도 열어 주세요 ^^~ <br>
+                    대부분의 함수는 float, vec2, vec3, vec4를 오버라이드 합니다. ^^~ <br>
+                    https://thebookofshaders.com/glossary/ <br>
                 </div>
             </div>
             
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts1')">
-                    <h4> 자주 사용하는 그래프</h4>
+                    <h4> 자주 사용하는 함수 및 그래프</h4>
                     <span class="toggle-icon" id="icon-concepts1">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts1">
@@ -42,21 +48,7 @@
                                 <code>float y = p.x;</code>
                             </div>
                         </li>
-                        
-                        <li><strong>2. 사인 곡선:</strong><br>
-                            <div class="code-example">
-                                <code>float y = sin(p.x);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>3. Fract 곡선 (톱니파 모양):</strong><br>
-                            <div class="code-example">
-                                <code>float y = fract(sin(p.x));</code>
-                            </div>
-                            <a href="https://thebookofshaders.com/glossary/?search=fract" target="_blank">📚 Fract 사용법</a><br>
-                            <em>fract(-1.3) = -2.0 + 0.7<br>fract(1.3) = 1.0 + 0.3</em>
-                        </li>
-                        
+                                                
                         <li><strong>4. Step (계단 그래프):</strong><br>
                             <div class="code-content" id="step-code">
                                 <div class="code-example">
@@ -74,13 +66,26 @@
                                 <code>float y = smoothstep(0.0, 1.0, p.x);</code>
                             </div>
                         </li>
-                        
-                        <li><strong>5. 가우시안 곡선:</strong><br>
+
+                        <li><strong>3. Fract 곡선 (톱니파 모양):</strong><br>
                             <div class="code-example">
-                                <code>float y = exp(-p.x * p.x);</code>
+                                <code>float y = fract(sin(p.x);</code>
+                            </div>
+                            <em>fract(-1.3) = -2.0 + 0.7<br>fract(1.3) = 1.0 + 0.3</em>
+                        </li>
+
+                        <li><strong>4. Floor :</strong><br>
+                            <div class="code-example">
+                                <code>p *= 3.0;<br>float y = floor(p.x);</code>
                             </div>
                         </li>
-                        
+
+                        <li><strong>4. mod:</strong><br>
+                            <div class="code-example">
+                                <code>float y = mod(p.x, 0.5);</code>
+                            </div>
+                        </li>
+
                         <li><strong>6. 절대값 곡선 (대칭):</strong><br>
                             <div class="code-example">
                                 <code>float y = abs(p.x);</code>
@@ -98,16 +103,28 @@
                                 <code>float y = sqrt(p.x);</code>
                             </div>
                         </li>
-                        
+
+                        <li><strong>2. 사인 곡선:</strong><br>
+                            <div class="code-example">
+                                <code>p.x *= 3.14;<br>float y = sin(p.x);</code>
+                            </div>
+                        </li>
+
                         <li><strong>9. 코사인:</strong><br>
                             <div class="code-example">
-                                <code>float y = cos(p.x);</code>
+                                <code>p.x *= 3.14;<br>float y = cos(p.x);</code>
                             </div>
                         </li>
                         
                         <li><strong>10. 탄젠트:</strong><br>
                             <div class="code-example">
-                                <code>float y = tan(p.x);</code>
+                                <code>p.x *= 3.14;<br>float y = tan(p.x);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>5. 가우시안 곡선:</strong><br>
+                            <div class="code-example">
+                                <code>float y = exp(-p.x * p.x);</code>
                             </div>
                         </li>
                         
@@ -116,11 +133,57 @@
                                 <code>float y = abs(fract(p.x) * 2.0 - 1.0);</code>
                             </div>
                         </li>
-                        
-                        <li><strong>💡 TIP - 좌표계 확대 방법:</strong><br>
-                            <div class="code-example">
-                                <code>p *= 3.14;</code>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 좌표계 정규화 방법 </h4><br>                    
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts5">
+                    <ul>
+                        Skia 좌표계는 Y축이 위에서 아래로 갈수록 커지기 때문에 y축 반전을 해준다. <br>
+                        아래 코드는 자주 사용 될듯... <br>
+                        <div class="code-example">                     
+<code>uv = fragCoord / iResolution.xy; 
+uv.y *= iResolution.y / iResolution.x;  // 종횡비 보정
+uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
+uv -= .5; // -.5 ~ .5 정규화</code>
+                        </div>
+
+                        <li><strong> 0 - 1 정규화 </strong><br>
+                            <div class="code-example">                     
+<code>uv = fragCoord / iResolution;
+uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
+float y = p.x;
+if (uv.x > .5) y = 0.;
+</code>
                             </div>
+                        </li>
+                        <li><strong> -.5 ~ .5 정규화 </strong><br>
+                            <div class="code-example">
+<code>uv = fragCoord / iResolution;
+uv.y = 1.0 - uv.y; // Skia 좌표계  y축 반전
+uv -= .5;
+float y = p.x;
+if (uv.x > .3 || uv.x < -.3) y = 0.;
+</code>
+                            </div>
+                        </li>
+                        <li><strong> xy 종횡비 맞추기 </strong><br>
+                            <div class="code-example">
+<code>uv = fragCoord / iResolution;
+uv.y *= iResolution.y / iResolution.x;
+uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
+uv -= .5;
+float y = p.x;
+if (uv.x > .3 || uv.x < -.3) y = 0.;
+</code>
+                            </div>
+                        </li>
+                        <li><strong> -1 ~ +1 정규화는 해보세요 ^~^</strong><br>
                         </li>
                     </ul>
                 </div>
@@ -133,7 +196,7 @@
 float y = p.x;           
                     </textarea>
                     <div class="controls">
-                        <button class="btn" onclick="compileShader(1)">🚀 실행</button>                     
+                        <button class="btn" onclick="compileShader(1)"> 실행</button>                     
                     </div>
                 </div>
                 
@@ -152,12 +215,11 @@ float y = p.x;
             <div class="lesson-header">
                 <div class="lesson-title"> 패턴 만들기</div>
                 <div class="lesson-description">
-                    <h3> 학습목표</h3>
-                    dot, step, smoothstep, fract, mod 함수 사용해보기<br>
-                    분석방법을 따라해본다.<br>
-                    <h3> 왠만하면 분석하지말고 함수 가져다 쓰자.</h3><br><br>
-
-                    <h3> 분석 방법</h3>                        
+                    <h3> 학습 목표</h3>
+                    패턴 모양일때 반복되는 구간의 x 값을 알 수 있다.<br>
+                    복잡한 코드를 분석하는 방법을 배울수 있다. <br><br>
+                    
+                    <h3> 코드 분석 방법</h3>                        
                     1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
                     2) 코드 분해해서 주석 처리<br>
                     3) 간단한 함수로 바꾸어 보기 (smoothstep → step)<br>
@@ -173,6 +235,8 @@ float y = p.x;
                 </div>
                 <div class="concepts-content" id="concepts2">
                     <ul>
+                        <li><strong>원리</strong><br>
+                        <img src="materials/circle.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <li><strong>정규화</strong><br>
                             <div class="code-example">
                                 <code>float2 uv = fragCoord / iResolution.xy;</code>
@@ -235,8 +299,50 @@ half4 main(float2 fragCoord) {
                     <span class="toggle-icon" id="icon-concepts3">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts3">
+                    <li><strong>원리</strong><br>
+                        <li><strong>p.x * p.y 의미는 x, y 둘다 1인 영역만 1로, 나머지 0 </strong><br>                      
+                    </li>
                     <ul>
-                        <li><strong>패턴 만들기 1</strong>
+                        <img src="materials/box1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/box2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/box3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <li><strong> 벡터 연산 팁</strong>
+                            <div class="code-example">
+                                <code>
+float rect(vec2 pt, vec2 size, vec2 center) {
+    vec2 dl = center - (size * 0.5);
+    vec2 ur = center + (size * 0.5);
+    vec2 result = step(dl, pt) * (1.0 - step(ur, pt));
+    return result.x * result.y;
+}
+uniform float2 iResolution;
+vec4 main(vec2 fragCoord) {
+    vec2 uv = fragCoord / iResolution.xy; 
+    uv.y *= iResolution.y / iResolution.x;  // 종횡비 보정
+    uv.y = 1.0 - uv.y;
+    uv -= .5; // -.5 ~ .5 정규화
+
+    vec2 size = vec2(0.2, 0.2);
+    vec2 center = vec2(0., 0.);
+    vec3 color = vec3(1.0, 1.0, 0.0) * rect(uv, size, center);
+    return vec4(color, 1.0);
+}
+    
+                                </code>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
+                    <h4> 패턴 만들기 </h4>
+                    <span class="toggle-icon" id="icon-concepts4">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts4">
+                    <ul>
+                        <li><strong>기본 패턴 만들기 </strong>
                             <div class="code-example">
                                 <code>uniform float2 iResolution;
 half4 main(float2 fragCoord) {
@@ -248,10 +354,10 @@ half4 main(float2 fragCoord) {
 }</code>                            
                             </div>
                         </li>
-                        <li><strong>박스 패턴 만들기</strong>                            
-                            <div class="code-example">
-                                <code>
-vec2 tile(vec2 _st, float _zoom) {
+                        <li><strong>박스 패턴 만들기</strong>      
+                            <li><strong> p.x * p.y를 출력하면, 둘다 1인 영역만 출력 !! </strong></li>               
+                            <div class="code-example">                                
+<code>vec2 tile(vec2 _st, float _zoom) {
     _st *= _zoom;
     return fract(_st);
 }
@@ -274,24 +380,7 @@ half4 main(float2 fragCoord) {
 }</code>                                 
                             </div>
                         </li>
-
-                        <li><strong> 벡터 연산 팁</strong>
-                            <div class="code-example">
-                                <code>vec2(a, b) * vec2(c, d) = vec2(a * c, b * d);
-dot(vec2(a, b), vec2(c, d)) = a * c + b * d;</code>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
-                    <h4> 터틀 패턴 만들기 </h4>
-                    <span class="toggle-icon" id="icon-concepts4">▼</span>
-                </div>
-                <div class="concepts-content" id="concepts4">
-                    <ul>
+                                                
                         <li><strong>터틀 패턴 만들기</strong>                            
                             <div class="code-example">
                                 <code>
@@ -428,7 +517,7 @@ half4 main(float2 fragCoord) {
         // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', function() {
             // concepts2, concepts3만 닫고 싶다면:
-            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4'];
+            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5'];
             
             sectionsToClose.forEach(conceptsId => {
                 const content = document.getElementById(conceptsId);
