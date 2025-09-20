@@ -12,9 +12,9 @@
         <p>Chapter 1. 주요 함수 및 기본 도형 그리기 </p>
 
         <nav class="chapter-nav">
-            <a href="index.html" class="chapter-btn active">Chapter 1. 주요 함수 및 기본 도형 그리기 </a>
-            <a href="chapter2.html" class="chapter-btn">Chapter 2. 랜덤 함수 및 이미지 샘플링 </a>
-            <a href="chapter3.html" class="chapter-btn">Chapter 3. 이미지 활용 알고리즘 </a>
+            <a href="index.html" class="chapter-btn active">Chapter 1. 기본 함수 및 기본 도형 그리기 </a>
+            <a href="chapter2.html" class="chapter-btn">Chapter 2. 랜덤 함수와 노이즈 함수 </a>
+            <a href="chapter3.html" class="chapter-btn">Chapter 3. 이미지 필터링 및 활용 알고리즘 </a>
         </nav>
     </div>
 
@@ -23,22 +23,27 @@
             <div class="lesson-header">
                 <div class="lesson-title"> 자주 사용하는 함수를 사용해보자. </div>
                 <div class="lesson-description">
-                    <h3> 학습 목표</h3>
-                    step, smoothstep, fract, mod, abs, 제곱, sqrt, sin, cos, tan, exp 그래프를 손으로 그려볼 수 있다. <br><br>
+                    <h3> 학습 목표</h3>                    
+                    아래 사이트는 기본 API Document 주소 입니다. 옆에 띄워주세요 <br>
+                    https://thebookofshaders.com/glossary/ <br><br>
 
-                    자주 사용하는 함수를 연습하기 위해 그래프를 그려 봅니다. <br>      
-                    그래프 정규화 영역은 -1 ~ 1 입니다. <br>
-                    float y 값에 원하는 수식을 넣어 보세요 <br><br>
-                    x 값은 p.x입니다.<br>                    
-                    그리고 함수를 참조하는 Document 입니다. 이것도 열어 주세요 ^^~ <br>
-                    대부분의 함수는 float, vec2, vec3, vec4를 오버라이드 합니다. ^^~ <br>
-                    https://thebookofshaders.com/glossary/ <br>
+                    1) step, smoothstep, fract, mod, abs, square, sqrt, sin, cos, tan, exp 그래프를 손으로 그려볼 수 있다. <br>
+                    float y 값에 원하는 아래 수식을 넣어보고 어떻게 그려지는지 확인하세용! <br><br>
+
+                    2) 그래프 정규화 영역은 -1 ~ 1 입니다. <br>
+                    좌표 정규화는 가장 기본적이고 중요한 내용입니다. <br>
+                    아래 내용을 테스트 해보시고 xy -4 ~ 4 정규화 하고 원점을 중앙으로 맞추어 보세요. <br><br>
+
+                    3) 스키아 좌표계는 Y 좌표가 반대 입니다. <br>
+                    이해를 돕기 위해 uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전 코드를 추가해 주세요<br><br>
+
+                    4) Uv += 값을 더하게 빼는 경우, 시각적으로 반대로 보입니다.
                 </div>
             </div>
             
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts1')">
-                    <h4> 자주 사용하는 함수 및 그래프</h4>
+                    <h4> 자주 사용하는 함수 및 그래프 ( 라이브러리 포함 )</h4>
                     <span class="toggle-icon" id="icon-concepts1">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts1">
@@ -53,10 +58,9 @@
                             <div class="code-content" id="step-code">
                                 <div class="code-example">
                                     <code>float y = step(0.5, p.x);
-// 또는 더 복잡한 예제:
-// p *= 2.;
-// float y = step(0.8, p.x);
-// y -= step(1.2, p.x);</code>
+//if (p.x < -0.3 && p.x > -0.5) y = .3;
+//if (p.x > 0.3 && p.x < 0.5) y = .6;
+</code>
                                 </div>
                             </div>
                         </li>
@@ -79,6 +83,15 @@
                                 <code>p *= 3.0;<br>float y = floor(p.x);</code>
                             </div>
                         </li>
+
+                        <li><strong>5. Dot :</strong><br>
+                            <div class="code-example">
+                                <code>p *= 3.0;<br>float y = dot(p.x, p.y);</code><br>
+                                // dot (vec2(a, b), vec2(c, d)) = a * c + b * d = 스칼라 값. <중요>
+                                // 그래프이상한데?
+                            </div>
+                        </li>
+                        
 
                         <li><strong>4. mod:</strong><br>
                             <div class="code-example">
@@ -182,16 +195,14 @@ float y = p.x;
 if (uv.x > .3 || uv.x < -.3) y = 0.;
 </code>
                             </div>
-                        </li>
-                        <li><strong> -1 ~ +1 정규화는 해보세요 ^~^</strong><br>
-                        </li>
+                        </li>                        
                     </ul>
                 </div>
             </div>
 
             <div class="lesson-content">
                 <div class="editor-section">
-                    <div class="section-header">SKSL 코드</div>
+                    <div class="section-header">SKSL 실습 코드</div>
                     <textarea class="code-editor" id="editor1">
 float y = p.x;           
                     </textarea>
@@ -218,13 +229,13 @@ float y = p.x;
                     <h3> 학습 목표</h3>
                     패턴 모양일때 반복되는 구간의 x 값을 알 수 있다.<br>
                     복잡한 코드를 분석하는 방법을 배울수 있다. <br><br>
-                    
+                    원과 사각형 코드를 수정해서 함수를 변경 해보세요 (step->smoothstep) <br>
+
                     <h3> 코드 분석 방법</h3>                        
                     1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
                     2) 코드 분해해서 주석 처리<br>
                     3) 간단한 함수로 바꾸어 보기 (smoothstep → step)<br>
                     4) 경계를 파악하고 경계를 파악 후 그려보기<br>
-                    5) 경계 값 기준으로 영역에 공통 값을 지정할 수 있는지 확인<br>
                 </div>
             </div>
             
@@ -236,7 +247,7 @@ float y = p.x;
                 <div class="concepts-content" id="concepts2">
                     <ul>
                         <li><strong>원리</strong><br>
-                        <img src="materials/circle.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/chapter1/circle.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <li><strong>정규화</strong><br>
                             <div class="code-example">
                                 <code>float2 uv = fragCoord / iResolution.xy;</code>
@@ -267,7 +278,7 @@ float circle(in vec2 _st, in float _radius) {
     return 1. - smoothstep(edge0, edge1, sqrt(dot(_st, _st)));
 }
 half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution.xy;
+    float2 uv = fragCoord / iResolution.xy  - .5;
     float color = circle(uv, 0.3);
     return half4(color, color, color, 1.0);
 }</code>
@@ -300,12 +311,13 @@ half4 main(float2 fragCoord) {
                 </div>
                 <div class="concepts-content" id="concepts3">
                     <li><strong>원리</strong><br>
-                        <li><strong>p.x * p.y 의미는 x, y 둘다 1인 영역만 1로, 나머지 0 </strong><br>                      
+                        <li><strong>p.x * p.y 의미는 x, y 둘다 1인 영역만 1로, 나머지 0 </strong><br>
+                        <li><strong>아래 그림은 step(dl, pt)와 (1. - step(ur, pt)) 를 나타낸 것이다. </strong><br>
                     </li>
                     <ul>
-                        <img src="materials/box1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <img src="materials/box2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <img src="materials/box3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/chapter1/box1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/chapter1/box2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/chapter1/box3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <li><strong> 벡터 연산 팁</strong>
                             <div class="code-example">
                                 <code>
@@ -342,7 +354,9 @@ vec4 main(vec2 fragCoord) {
                 </div>
                 <div class="concepts-content" id="concepts4">
                     <ul>
+                        <img src="materials/chapter1/pattern.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <li><strong>기본 패턴 만들기 </strong>
+
                             <div class="code-example">
                                 <code>uniform float2 iResolution;
 half4 main(float2 fragCoord) {
@@ -383,11 +397,9 @@ half4 main(float2 fragCoord) {
                                                 
                         <li><strong>터틀 패턴 만들기</strong>                            
                             <div class="code-example">
-                                <code>
-uniform vec2 u_resolution;
-uniform float u_time;
-
-vec2 rotate2D (vec2 _st, float _angle) {
+                                <code>uniform float2 iResolution;
+const float PI = 3.141592;
+float2 rotate2D (vec2 _st, float _angle) {
     _st -= 0.5;
     _st =  mat2(cos(_angle),-sin(_angle),
                 sin(_angle),cos(_angle)) * _st;
@@ -395,19 +407,20 @@ vec2 rotate2D (vec2 _st, float _angle) {
     return _st;
 }
 
-vec2 tile (vec2 _st, float _zoom) {
+float2 tile (vec2 _st, float _zoom) {
     _st *= _zoom;
     return fract(_st);
 }
 
-vec2 rotateTilePattern(vec2 _st){
+float2 rotateTilePattern(float2 _st){
     //  Scale the coordinate system by 2x2
     _st *= 2.0;
+    
     //  Give each cell an index number
     //  according to its position
     float index = 0.0;
-    index += step(1., mod(_st.x,2.0));
-    index += step(1., mod(_st.y,2.0))*2.0;
+    index += step(1., mod(_st.x, 2.0));
+    index += step(1., mod(_st.y, 2.0)) * 2.0;
 
     //      |
     //  2   |   3
@@ -421,44 +434,39 @@ vec2 rotateTilePattern(vec2 _st){
     // Rotate each cell according to the index
     if(index == 1.0){
         //  Rotate cell 1 by 90 degrees
-        _st = rotate2D(_st,PI*0.5);
+        _st = rotate2D(_st,PI * 0.5);
     } else if(index == 2.0){
         //  Rotate cell 2 by -90 degrees
-        _st = rotate2D(_st,PI*-0.5);
-    } else if(index == 3.0){
+        _st = rotate2D(_st,PI * -0.5);
+    } else if(index == 3.0) {
         //  Rotate cell 3 by 180 degrees
-        _st = rotate2D(_st,PI);
+        _st = rotate2D(_st, PI);
     }
     return _st;
 }
 
-uniform float2 iResolution;    
-void main (void) {
-    vec2 st = gl_FragCoord.xy/iResolution.xy;
+half4 main(float2 fragCoord) {
+    vec2 st = fragCoord.xy / iResolution.xy;
 
-    st = tile(st,3.0);
+    st = tile(st, 3.0);
     st = rotateTilePattern(st);
-
-    // Make more interesting combinations
-    // st = tile(st,2.0);
-    // st = rotate2D(st,-PI*u_time*0.25);
-    // st = rotateTilePattern(st*2.);
-    // st = rotate2D(st,PI*u_time*0.25);
 
     // step(st.x,st.y) just makes a b&w triangles
     // but you can use whatever design you want.
-    gl_FragColor = vec4(vec3(step(st.x,st.y)),1.0);
+    return half4(half3(step(st.x,st.y)), 1.0);
 }
                                 </code>                                 
                             </div>
                         </li>
+
+                        <li><strong> Fractal, 회전,이동,스케일 행렬은 추후에 </strong></li>
                     </ul>
                 </div>
             </div>
 
             <div class="lesson-content">
                 <div class="editor-section">
-                    <div class="section-header">SKSL 코드</div>
+                    <div class="section-header">SKSL 실습 코드</div>
                     <textarea class="code-editor" id="editor2">uniform float2 iResolution;
 half4 main(float2 fragCoord) {
     return half4(1.0);

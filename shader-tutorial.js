@@ -61,19 +61,22 @@ function clearError(lessonNum) {
 function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
     return `
     uniform float2 iResolution;
+
+    float rand(float2 uv) { 
+        return fract(sin(dot(uv.xy, vec2(12.9898,78.233))) * 43758.5453123);
+    }
+        
     half4 main(float2 fragCoord) {
         float2 uv = fragCoord / iResolution;   // 0 ~ 1 좌표
         uv.y *= iResolution.y / iResolution.x;
 
-        // skia y축이 아래로 향하므로 y축 반전
-        // float2 p = uv * 2.0 - 1.0;
-        float2 p = float2(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0);        
+        // skia y축이 아래로 향하므로 y축 반전        
         // 좌표계 범위: x: -1 ~ 1, y: -1 ~ 1     
-        
+        float2 p = float2(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0);                
         
         ${funcBody}
 
-        float lineThickness = 0.05;
+        float lineThickness = 0.03;
         float d = abs(p.y - y);
         float line = 1.0 - smoothstep(0.0, lineThickness, d);
 

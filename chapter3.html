@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKSL 셰이더 교육 자료</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1> SKSL 셰이더 교육 자료</h1>
+        <p> Chapter 2. 랜덤과 노이즈 </p>
+
+        <nav class="chapter-nav">
+            <a href="index.html" class="chapter-btn">Chapter 1. 기본 함수 및 기본 도형 그리기 </a>
+            <a href="chapter2.html" class="chapter-btn">Chapter 2. 랜덤 함수와 노이즈 함수 </a>
+            <a href="chapter3.html" class="chapter-btn active">Chapter 3. 이미지 필터링 및 활용 알고리즘 </a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title"> 이미지 샘플링 해보기 </div>
+                <div class="lesson-description">
+                    <h3> 학습 목표</h3>
+                    이미지 샘플링을 해보자. <br>
+                    랜덤 함수를 만들어지는 원리는 좋은 해시 함수를 만드는 것 <br>
+                    12.9898, 78.233, 43758.5453123 과 같은 값은 마법의 상수. <br><br>
+                    
+                    <h3> 랜덤 함수 (해시 함수) 생성 방법</h3>                        
+
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-content" id="concepts6">
+                    <ul>                       
+                        <li><strong> 이미지 샘플링 함수 </strong><br>
+                            <div class="code-example">                     
+    <code>uniform float2 iResolution;
+uniform vec2 u_tex0;
+
+vec4 main(float2 fragCoord) {
+    float2 uv = (fragCoord / iResolution.xy) - .5;    
+    vec4 color = texture2D(u_tex0, uv);
+    return color;
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 2D 노이즈 함수 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>              
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor3">
+uniform vec2 iResolution;
+
+half4 main(float2 fragCoord) {
+    return vec4(1.0);
+}
+
+</textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(3)">실행</button>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error3"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading3">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas3" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleConcepts(conceptsId) {
+            const content = document.getElementById(conceptsId);
+            const icon = document.getElementById(`icon-${conceptsId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleCode(codeId) {
+            const content = document.getElementById(codeId);
+            const toggle = document.getElementById(`toggle-${codeId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = '400px';
+                toggle.textContent = '접기';
+            } else {
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                toggle.textContent = '펼치기';
+            }
+        }
+
+        // 초기 상태 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            // 모든 concepts는 처음에 펼쳐져 있음
+            const conceptsContents = document.querySelectorAll('.concepts-content');
+            conceptsContents.forEach(content => {
+                content.style.maxHeight = content.scrollHeight + 'px';
+            });
+        });
+
+        // Placeholder functions for shader compilation
+        function compileShader(id) {
+            console.log(`Compiling shader ${id}...`);
+            // 실제 셰이더 컴파일 로직이 여기에 들어갑니다
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/canvaskit.min.js"></script>
+    <script src="shader-tutorial.js"></script>
+</body>
+</html>
