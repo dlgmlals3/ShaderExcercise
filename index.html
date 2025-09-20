@@ -38,7 +38,7 @@
             
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts1')">
-                    <h4> 자주 사용하는 함수 및 그래프</h4>
+                    <h4> 자주 사용하는 함수 및 그래프 ( 라이브러리 포함 )</h4>
                     <span class="toggle-icon" id="icon-concepts1">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts1">
@@ -79,6 +79,14 @@
                                 <code>p *= 3.0;<br>float y = floor(p.x);</code>
                             </div>
                         </li>
+
+                        <li><strong>5. Dot :</strong><br>
+                            <div class="code-example">
+                                <code>p *= 3.0;<br>float y = dot(p.x, p.y);</code><br>
+                                dot (vec2(a, b), vec2(c, d)) = a * c + b * d = 스칼라 값. <중요>
+                            </div>
+                        </li>
+                        
 
                         <li><strong>4. mod:</strong><br>
                             <div class="code-example">
@@ -191,7 +199,7 @@ if (uv.x > .3 || uv.x < -.3) y = 0.;
 
             <div class="lesson-content">
                 <div class="editor-section">
-                    <div class="section-header">SKSL 코드</div>
+                    <div class="section-header">SKSL 실습 코드</div>
                     <textarea class="code-editor" id="editor1">
 float y = p.x;           
                     </textarea>
@@ -458,7 +466,7 @@ void main (void) {
 
             <div class="lesson-content">
                 <div class="editor-section">
-                    <div class="section-header">SKSL 코드</div>
+                    <div class="section-header">SKSL 실습 코드</div>
                     <textarea class="code-editor" id="editor2">uniform float2 iResolution;
 half4 main(float2 fragCoord) {
     return half4(1.0);

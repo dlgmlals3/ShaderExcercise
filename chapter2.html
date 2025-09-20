@@ -9,7 +9,7 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p> Chapter 2. 랜덤 함수 이미지 샘플링 </p>
+        <p> Chapter 2. 랜덤과 노이즈 </p>
 
         <nav class="chapter-nav">
             <a href="index.html" class="chapter-btn">Chapter 1. 주요 함수 및 기본 도형 그리기 </a>
@@ -25,15 +25,76 @@
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
                     랜덤 함수 만들어보자.<br>
-
-                    <h3>🔍 분석 방법</h3>                        
-                    1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
-                    2) 코드 분해해서 주석 처리<br>
-                    3) 간단한 함수로 바꾸어 보기 (smoothstep → step)<br>
-                    4) 경계를 파악하고 경계를 파악 후 그려보기<br>
-                    5) 경계 값 기준으로 영역에 공통 값을 지정할 수 있는지 확인<br>
+                    랜덤 함수를 만들어지는 원리는 좋은 해시 함수를 만드는 것 <br>
+                    12.9898, 78.233, 43758.5453123 과 같은 값은 마법의 상수. <br><br>
+                    
+                    <h3> 랜덤 함수 (해시 함수) 생성 방법</h3>                        
+                    1) 부동 소수점을 곱해준다. 43758.5453123 <br>
+                    2) dot 함수를 사용하여 고차원을 스칼라 값으로 변환 <br>                    
+                    4) fract, sin, cos 값을 적절하게 사용.<br> <br>
+                    Cellular noise, Fractal은 추후에 .... <br>                    
                 </div>
             </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 그래프 그려보기  ( 라이브러리 포함 ) </h4><br>                    
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts5">
+                    <ul>                       
+                        <li><strong> 랜덤 함수 </strong><br>
+                            <div class="code-example">                     
+    <code>uv.x *= 6.28; <br>float y = fract(sin(uv.x)*1.0);</code>
+                            </div>
+                        <li><strong> 랜덤 함수 2 </strong><br>
+                            <div class="code-example">                     
+    <code>float y = fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453123);</code>
+                            </div>
+                        </li>  
+                        
+                        <li><strong> 노이즈 함수 1 </strong><br>
+                            <div class="code-example">                     
+    <code>float y = mix(rand(p), rand(p + 1.0), p.x);</code>
+                            </div>
+                        </li> 
+                        <li><strong> 노이즈 함수 2 </strong><br>
+                            <div class="code-example">                     
+    <code>float y = mix(rand(p), rand(p + 1.0), smoothstep(0., 1., p.x));</code>
+                            </div>
+                        </li> 
+                        <li><strong> 노이즈 함수 3 </strong><br>
+                            <div class="code-example">
+    <code>float f = fract(p.x); <br>float u = f * f * (3.0 - 2.0 * f );<br>float y = mix(rand(p), rand(p + 1.0), u);</code>
+                            </div>
+                        </li> 
+                    </ul>
+                </div>
+            </div>
+
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 실습 코드</div>
+                    <textarea class="code-editor" id="editor1">
+float y = p.x;           
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(1)"> 실행</button>                     
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error1"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
 
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts5')">
@@ -44,13 +105,41 @@
                     <ul>                       
                         <li><strong> 0 - 1 정규화 </strong><br>
                             <div class="code-example">                     
-<code>uv = fragCoord / iResolution;
-uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
-float y = p.x;
-if (uv.x > .5) y = 0.;
-</code>
+    <code>return fract(sin(dot(uv.xy, vec2(12.9898,78.233))) * 43758.5453123);</code>
                             </div>
                         </li>                        
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 노이즈 함수 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts5">
+                    Noise 함수, Random 함수 안에 구현체를 테스트 해보세요 <br><br>
+                    노이즈 함수를 사용하는 의미를 파악하세요 <br>
+                    - 거친 랜덤 함수를 부드럽게 이어줌.
+                    <ul>                       
+                        <li><strong> Noise 함수 1 </strong><br>
+                            <div class="code-example">                     
+    <code>return fract(sin(dot(p.xy, vec2(12.9898,78.233))) * 43758.5453123);</code>
+                            </div>
+                        </li>
+                        <li><strong> Noise 함수 2 </strong><br>
+                            <div class="code-example">                     
+    <code>return mix(rand(p), rand(p + 1.0), smoothstep(0., 1., p.x));</code>
+                            </div>
+                        </li>        
+
+                        <li><strong> 2D Noise 함수 </strong><br>
+                            <div class="code-example">                     
+    <code>float f = fract(p.x);<br>float u = f * f * (3.0 - 2.0 * f );
+return mix(rand(p), rand(p + 1.0), u);</code>
+                            </div>
+                        </li> 
+                        
                     </ul>
                 </div>
             </div>
@@ -59,14 +148,29 @@ if (uv.x > .5) y = 0.;
                 <div class="editor-section">
                     <div class="section-header">SKSL 코드</div>
                     <textarea class="code-editor" id="editor2">uniform float2 iResolution;
+float rand(float2 uv) { 
+    return fract(sin(dot(uv.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+float noise(float2 p) {
+    float f = fract(p.x);
+    float u = f * f * (3.0 - 2.0 * f );
+    return mix(rand(p), rand(p + 1.0), u);
+}
+
 half4 main(float2 fragCoord) {
-    return half4(1.0);
-}</textarea>
+    float2 uv = fragCoord / iResolution.xy;    
+
+    float randValue = rand(uv);
+    //float randValue = noise(uv);
+    return half4(vec3(randValue), 1.0);
+}
+</textarea>
                     <div class="controls">
                         <button class="btn" onclick="compileShader(2)">실행</button>
                     </div>
                 </div>
-                
+
                 <div class="preview-section">
                     <div class="section-header">미리보기</div>
                     <div id="error2"></div>
@@ -76,6 +180,50 @@ half4 main(float2 fragCoord) {
                     </div>
                 </div>
             </div>
+
+<div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 2D 노이즈 함수 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts5">
+                    Noise 함수, Random 함수 안에 구현체를 테스트 해보세요 <br><br>
+
+                    <ul>                       
+                        <li><strong> Noise 함수 1 </strong><br>
+                            <div class="code-example">                     
+    <code>여기다 2d Noise 함수 설명하자 내일 !!!!!! </code>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor3">
+uniform float2 iResolution;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution.xy;    
+    return half4(vec3(1.0), 1.0);
+}
+</textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(3)">실행</button>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error3"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading3">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas3" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
