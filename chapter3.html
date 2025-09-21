@@ -34,16 +34,67 @@
             </div>
 
             <div class="key-concepts">
-                <div class="concepts-content" id="concepts6">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 2D 노이즈 함수 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>        
+
+                <div class="concepts-content" id="concepts5">
                     <ul>                       
                         <li><strong> 이미지 샘플링 함수 </strong><br>
                             <div class="code-example">                     
-    <code>uniform float2 iResolution;
-uniform vec2 u_tex0;
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    return iTexture.eval(uv * iResolution);
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+                    <ul>                       
+                        <li><strong> 이미지 샘플링 함수 </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float  iTime;
+uniform shader iTexture;
+float PI = 3.141592;
 
-vec4 main(float2 fragCoord) {
-    float2 uv = (fragCoord / iResolution.xy) - .5;    
-    vec4 color = texture2D(u_tex0, uv);
+float random (in vec2 st) {
+    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+}
+
+float noise (in vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    // Four corners in 2D of a tile
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+}
+
+half4 main (float2 fragcoord) {
+    vec2 st = fragcoord.xy/iResolution.xy;
+
+    float scale = 2.0;
+    float offset = 0.5;
+
+    float angle = noise( st + iTime * 0.1 ) * PI;
+    float radius = offset;
+
+    st *= scale;
+    st += radius * vec2(cos(angle),sin(angle));
+    
+    vec4 color = iTexture.eval(st * iResolution);
     return color;
 }
 </code>
@@ -52,24 +103,16 @@ vec4 main(float2 fragCoord) {
                     </ul>
                 </div>
             </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
-                    <h4> 2D 노이즈 함수 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts5">▼</span>
-                </div>              
-            </div>
-
             <div class="lesson-content">
                 <div class="editor-section">
                     <div class="section-header">SKSL 코드</div>
                     <textarea class="code-editor" id="editor3">
-uniform vec2 iResolution;
-
+uniform float2 iResolution;
+uniform shader iTexture;
 half4 main(float2 fragCoord) {
-    return vec4(1.0);
+    float2 uv = fragCoord / iResolution;
+    return iTexture.eval(uv * iResolution);
 }
-
 </textarea>
                     <div class="controls">
                         <button class="btn" onclick="compileShader(3)">실행</button>
