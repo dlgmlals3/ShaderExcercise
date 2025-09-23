@@ -9,7 +9,7 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p> Chapter 2. 랜덤과 노이즈 </p>
+        <p> Chapter 2. 이미지 필터링 및 활용 알고리즘 </p>
 
         <nav class="chapter-nav">
             <a href="index.html" class="chapter-btn">Chapter 1. 기본 함수 및 기본 도형 그리기 </a>
@@ -26,7 +26,8 @@
                     <h3> 학습 목표</h3>
                     랜덤 함수 만들어보자.<br>
                     랜덤 함수를 만들어지는 원리는 좋은 해시 함수를 만드는 것 <br>
-                    12.9898, 78.233, 43758.5453123 과 같은 값은 마법의 상수. <br><br>
+                    12.9898, 78.233, 43758.5453123 과 같은 값은 마법의 상수. <br>
+                    나만의 마법의 상수, 나만의 해쉬 함수를 만들어보자. <br><br>
                     
                     <h3> 랜덤 함수 (해시 함수) 생성 방법</h3>                        
                     1) 부동 소수점을 곱해준다. 43758.5453123 <br>
@@ -99,8 +100,8 @@ float y = p.x;
                     </ul>
 
                     <ul>                       
-                        <li><strong> 랜덤 함수 + fract로 모자이크 만들어보기 </strong><br>
-                            <img src="materials/chapter2/fract_floor.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <img src="materials/chapter2/fract_floor.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
+                        <li><strong> 랜덤 함수 + fract로 모자이크 만들어보기 </strong><br>                            
                             <div class="code-example">                     
     <code>uniform float2 iResolution;
 float random (vec2 st) {
@@ -198,16 +199,17 @@ half4 main(float2 fragCoord) {
                 </div>
             </div>
 
-<div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts1')">
                     <h4> 2D 노이즈 함수 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                    <span class="toggle-icon" id="icon-concepts1">▼</span>
                 </div>
-                <div class="concepts-content" id="concepts5">
+                <div class="concepts-content" id="concepts1">
                     2D 노이즈 함수를 사용하면 부드러운 효과를 나타낼수 있음. <br><br>
-                    <ul>                       
+                    <ul>                                               
+                        <img src="materials/chapter3/image.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
                         <img src="materials/chapter2/bilinear_concept.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-                        <li><strong> Noise 활용 1 </strong><br>
+                        <li><strong> Noise 활용 1 (Noise 보간)</strong><br>
                             <div class="code-example">                     
     <code>uniform vec2 iResolution;
 float random (in vec2 st) {
@@ -253,10 +255,10 @@ half4 main(float2 fragCoord) {
 </code>
                             </div>
                         </li>
-                                                <li><strong> Noise 활용 2 (Fractal Noise) </strong><br>
+                            <li><strong> Noise 활용 2 (Fractal Noise) </strong><br>
                             <div class="code-example">                     
     <code>uniform vec2 iResolution;
-//uniform float iTime;
+uniform float iTime;
 float hash(vec2 p) {
     p = 50. * fract(p * 0.3183099 + vec2(0.71, 0.113));
     return -1.0 + 2.0 * fract(p.x * p.y * (p.x  + p.y));
@@ -369,14 +371,30 @@ half4 main(float2 fragCoord) {
             }
         }
 
-        // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', function() {
-            // 모든 concepts는 처음에 펼쳐져 있음
-            const conceptsContents = document.querySelectorAll('.concepts-content');
-            conceptsContents.forEach(content => {
-                content.style.maxHeight = content.scrollHeight + 'px';
+            // concepts2, concepts3만 닫고 싶다면:
+            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5', 'concepts6', 'concepts7',
+                'concepts8'
+            ];
+            
+            sectionsToClose.forEach(conceptsId => {
+                const content = document.getElementById(conceptsId);
+                const icon = document.getElementById(`icon-${conceptsId}`);
+                const header = document.querySelector(`[onclick="toggleConcepts('${conceptsId}')"]`);
+                
+                if (content) {
+                    content.classList.add('collapsed');
+                    content.style.maxHeight = '0';
+                }
+                if (icon) {
+                    icon.textContent = '▼';
+                }
+                if (header) {
+                    header.classList.add('closed');
+                }
             });
         });
+
 
         // Placeholder functions for shader compilation
         function compileShader(id) {

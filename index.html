@@ -53,7 +53,13 @@
                                 <code>float y = p.x;</code>
                             </div>
                         </li>
-                                                
+
+                        <li><strong>3. Clamp 곡선 : </strong><br>
+                            <div class="code-example">
+                                <code>float y = clamp(p.x, 0, 1);</code>
+                            </div>
+                        </li>
+                        
                         <li><strong>4. Step (계단 그래프):</strong><br>
                             <div class="code-content" id="step-code">
                                 <div class="code-example">
@@ -67,7 +73,7 @@
                         
                         <li><strong>4.1. SmoothStep:</strong><br>
                             <div class="code-example">
-                                <code>float y = smoothstep(0.0, 1.0, p.x);</code>
+                                <code>float y = smoothstep(0.0, 1.0, p.x);<br>p.x = clamp(p.x, 0, 1);<br>float y = p.x * p.x * (3.0 - 2.0 * p.x);</code>
                             </div>
                         </li>
 
@@ -78,6 +84,7 @@
                             <em>fract(-1.3) = -2.0 + 0.7<br>fract(1.3) = 1.0 + 0.3</em>
                         </li>
 
+            
                         <li><strong>4. Floor :</strong><br>
                             <div class="code-example">
                                 <code>p *= 3.0;<br>float y = floor(p.x);</code>
@@ -160,10 +167,10 @@
                         Skia 좌표계는 Y축이 위에서 아래로 갈수록 커지기 때문에 y축 반전을 해준다. <br>
                         아래 코드는 자주 사용 될듯... <br>
                         <div class="code-example">                     
-<code>uv = fragCoord / iResolution.xy; 
-uv.y *= iResolution.y / iResolution.x;  // 종횡비 보정
-uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
-uv -= .5; // -.5 ~ .5 정규화</code>
+<code>0 ~ 1 좌표계 정규화 --> uv = fragCoord / iResolution.xy; 
+종횡비 보정 --> uv.y *= iResolution.y / iResolution.x;
+Skia y축 반전 --> uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
+원점으로 좌표계 정규화 --> uv -= .5;</code>
                         </div>
 
                         <li><strong> 0 - 1 정규화 </strong><br>
@@ -227,9 +234,11 @@ float y = p.x;
                 <div class="lesson-title"> 패턴 만들기</div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
-                    패턴 모양일때 반복되는 구간의 x 값을 알 수 있다.<br>
+                    패턴 모양일때 반복되는 구간의 x,y 값을 알 수 있다.(fract, floor)<br>
+                    손으로 영역을 그려보자, 헷갈리는 경우 대표하는 픽셀만 구해서 생각하자<br>
                     복잡한 코드를 분석하는 방법을 배울수 있다. <br><br>
                     원과 사각형 코드를 수정해서 함수를 변경 해보세요 (step->smoothstep) <br>
+                    상수에 목숨걸지말자 <br>
 
                     <h3> 코드 분석 방법</h3>                        
                     1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
@@ -525,7 +534,9 @@ half4 main(float2 fragCoord) {
         // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', function() {
             // concepts2, concepts3만 닫고 싶다면:
-            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5'];
+            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5', 'concepts6', 'concepts7',
+                'concepts8'
+            ];
             
             sectionsToClose.forEach(conceptsId => {
                 const content = document.getElementById(conceptsId);
