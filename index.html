@@ -24,148 +24,33 @@
                 <div class="lesson-title"> 자주 사용하는 함수를 사용해보자. </div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>                    
-                    아래 사이트는 기본 API Document 주소 입니다. 옆에 띄워주세요 <br>
-                    https://thebookofshaders.com/glossary/ <br><br>
-
+                    아래 사이트는 canvasKit을 사용하여 직접 만들었습니다. <br>
+                    - https://skia.org/docs/user/modules/canvaskit/
+                    기본 API Document 주소 입니다. 옆에 띄워주세요 <br>
+                    - https://thebookofshaders.com/glossary/ <br><br>
+                    
                     1) step, smoothstep, fract, mod, abs, square, sqrt, sin, cos, tan, exp 그래프를 손으로 그려볼 수 있다. <br>
                     float y 값에 원하는 아래 수식을 넣어보고 어떻게 그려지는지 확인하세용! <br><br>
 
                     2) 그래프 정규화 영역은 -1 ~ 1 입니다. <br>
                     좌표 정규화는 가장 기본적이고 중요한 내용입니다. <br>
-                    아래 내용을 테스트 해보시고 xy -4 ~ 4 정규화 하고 원점을 중앙으로 맞추어 보세요. <br><br>
+                    아래 내용을 테스트 해보시고 xy -4 ~ 4 정규화 하고 원점을 중앙으로 맞추어 보세요. <br>
+                    - 스키아 좌표계는 Y 좌표가 반대 입니다. <br>
+                    - 이해를 돕기 위해 uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전 코드를 추가해 주세요<br><br>
 
-                    3) 스키아 좌표계는 Y 좌표가 반대 입니다. <br>
-                    이해를 돕기 위해 uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전 코드를 추가해 주세요<br><br>
-
-                    4) Uv += 값을 더하게 빼는 경우, 시각적으로 반대로 보입니다.
+                    4) Uv 값을 더하거나 빼는 경우, 시각적으로 반대로 보입니다.
                 </div>
             </div>
             
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts1')">
-                    <h4> 자주 사용하는 함수 및 그래프 ( 라이브러리 포함 )</h4>
-                    <span class="toggle-icon" id="icon-concepts1">▼</span>
-                </div>
-                <div class="concepts-content" id="concepts1">
-                    <ul>
-                        <li><strong>1. 직선:</strong><br>
-                            <div class="code-example">
-                                <code>float y = p.x;</code>
-                            </div>
-                        </li>
-
-                        <li><strong>3. Clamp 곡선 : </strong><br>
-                            <div class="code-example">
-                                <code>float y = clamp(p.x, 0, 1);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>4. Step (계단 그래프):</strong><br>
-                            <div class="code-content" id="step-code">
-                                <div class="code-example">
-                                    <code>float y = step(0.5, p.x);
-//if (p.x < -0.3 && p.x > -0.5) y = .3;
-//if (p.x > 0.3 && p.x < 0.5) y = .6;
-</code>
-                                </div>
-                            </div>
-                        </li>
-                        
-                        <li><strong>4.1. SmoothStep:</strong><br>
-                            <div class="code-example">
-                                <code>float y = smoothstep(0.0, 1.0, p.x);<br>p.x = clamp(p.x, 0, 1);<br>float y = p.x * p.x * (3.0 - 2.0 * p.x);</code>
-                            </div>
-                        </li>
-
-                        <li><strong>3. Fract 곡선 (톱니파 모양):</strong><br>
-                            <div class="code-example">
-                                <code>float y = fract(sin(p.x);</code>
-                            </div>
-                            <em>fract(-1.3) = -2.0 + 0.7<br>fract(1.3) = 1.0 + 0.3</em>
-                        </li>
-
             
-                        <li><strong>4. Floor :</strong><br>
-                            <div class="code-example">
-                                <code>p *= 3.0;<br>float y = floor(p.x);</code>
-                            </div>
-                        </li>
-
-                        <li><strong>5. Dot :</strong><br>
-                            <div class="code-example">
-                                <code>p *= 3.0;<br>float y = dot(p.x, p.y);</code><br>
-                                // dot (vec2(a, b), vec2(c, d)) = a * c + b * d = 스칼라 값. <중요>
-                                // 그래프이상한데?
-                            </div>
-                        </li>
-                        
-
-                        <li><strong>4. mod:</strong><br>
-                            <div class="code-example">
-                                <code>float y = mod(p.x, 0.5);</code>
-                            </div>
-                        </li>
-
-                        <li><strong>6. 절대값 곡선 (대칭):</strong><br>
-                            <div class="code-example">
-                                <code>float y = abs(p.x);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>7. 제곱 곡선:</strong><br>
-                            <div class="code-example">
-                                <code>float y = p.x * p.x;</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>8. 제곱근:</strong><br>
-                            <div class="code-example">
-                                <code>float y = sqrt(p.x);</code>
-                            </div>
-                        </li>
-
-                        <li><strong>2. 사인 곡선:</strong><br>
-                            <div class="code-example">
-                                <code>p.x *= 3.14;<br>float y = sin(p.x);</code>
-                            </div>
-                        </li>
-
-                        <li><strong>9. 코사인:</strong><br>
-                            <div class="code-example">
-                                <code>p.x *= 3.14;<br>float y = cos(p.x);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>10. 탄젠트:</strong><br>
-                            <div class="code-example">
-                                <code>p.x *= 3.14;<br>float y = tan(p.x);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>5. 가우시안 곡선:</strong><br>
-                            <div class="code-example">
-                                <code>float y = exp(-p.x * p.x);</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>11. Triangular Wave (지그재그):</strong><br>
-                            <div class="code-example">
-                                <code>float y = abs(fract(p.x) * 2.0 - 1.0);</code>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts5')">
                     <h4> 좌표계 정규화 방법 </h4><br>                    
                     <span class="toggle-icon" id="icon-concepts5">▼</span>
                 </div>
                 <div class="concepts-content" id="concepts5">
-                    <ul>
-                        Skia 좌표계는 Y축이 위에서 아래로 갈수록 커지기 때문에 y축 반전을 해준다. <br>
-                        아래 코드는 자주 사용 될듯... <br>
+                    <ul>                        
+                        <h3>꼭 알아 두자.</h3>
                         <div class="code-example">                     
 <code>0 ~ 1 좌표계 정규화 --> uv = fragCoord / iResolution.xy; 
 종횡비 보정 --> uv.y *= iResolution.y / iResolution.x;
@@ -176,9 +61,9 @@ Skia y축 반전 --> uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
                         <li><strong> 0 - 1 정규화 </strong><br>
                             <div class="code-example">                     
 <code>uv = fragCoord / iResolution;
-uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
+//uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
 float y = p.x;
-if (uv.x > .5) y = 0.;
+//if (uv.x > .5) y = 0.;
 </code>
                             </div>
                         </li>
@@ -188,21 +73,137 @@ if (uv.x > .5) y = 0.;
 uv.y = 1.0 - uv.y; // Skia 좌표계  y축 반전
 uv -= .5;
 float y = p.x;
-if (uv.x > .3 || uv.x < -.3) y = 0.;
+//if (uv.x > .3 || uv.x < -.3) y = 0.;
 </code>
                             </div>
                         </li>
-                        <li><strong> xy 종횡비 맞추기 </strong><br>
+                        <li><strong> 실습 -1 ~ 1 만들어보자. </strong><br>
                             <div class="code-example">
 <code>uv = fragCoord / iResolution;
 uv.y *= iResolution.y / iResolution.x;
-uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
-uv -= .5;
+//uv.y = 1.0 - uv.y; // Skia 좌표계 y축 반전
 float y = p.x;
-if (uv.x > .3 || uv.x < -.3) y = 0.;
+//if (uv.x > 0.9 || uv.x < -0.9) y = 0.;
 </code>
                             </div>
                         </li>                        
+                    </ul>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts1')">
+                    <h4> 자주 사용하는 함수 및 그래프 ( 라이브러리 포함 )</h4>
+                    <span class="toggle-icon" id="icon-concepts1">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts1">
+                    <h3> <br> 라이프러리 포함된 Editor의 좌표계 : -1 ~ 1</h3><br>
+                    
+                    <ul>
+                        <li><strong>1. 직선:</strong><br>
+                            <div class="code-example">
+                                <code>float y = p.x;</code>
+                            </div>
+                        </li>
+
+                        <li><strong>2. Clamp 곡선 : </strong><br>
+                            <div class="code-example">
+                                <code>float y = clamp(p.x, 0, 1);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>3. Step (계단 그래프):</strong><br>
+                            <div class="code-content" id="step-code">
+                                <div class="code-example">
+                                    <code>float y = step(0.5, p.x);
+//if (p.x < -0.3 && p.x > -0.5) y = .3;
+//if (p.x > 0.3 && p.x < 0.5) y = .6;
+</code>
+                                </div>
+                            </div>
+                        </li>
+                        
+                        <li><strong>4. SmoothStep:</strong><br>
+                            <div class="code-example">
+                                <code>float y = smoothstep(0.0, 1.0, p.x);<br>p.x = clamp(p.x, 0, 1);<br>//float y = p.x * p.x * (3.0 - 2.0 * p.x);</code>
+                            </div>
+                        </li>
+
+                        <li><strong>5. Fract 곡선 (톱니파 모양):</strong><br>
+                            <div class="code-example">
+                                <code>float y = fract(sin(p.x));</code>
+                            </div>
+                            <em>fract(-1.3) = -2.0 + 0.7<br>fract(1.3) = 1.0 + 0.3</em>
+                        </li>
+
+            
+                        <li><strong>6. Floor : (내림)</strong><br>
+                            <div class="code-example">
+                                <code>//p *= 3.0;<br>float y = floor(p.x);</code>
+                            </div>
+                        </li>
+
+                        <li><strong>7. Dot :</strong><br>
+                            <div class="code-example">
+                                <code>p *= 3.0;<br>float y = dot(p.x, p.x);</code><br>
+                                // 스칼라로 만들어줌.
+                            </div>
+                        </li>
+                        
+
+                        <li><strong>8. mod:</strong><br>
+                            <div class="code-example">
+                                <code>float y = mod(p.x, 0.5);</code>
+                            </div>
+                        </li>
+
+                        <li><strong>9. 절대값 곡선 (대칭):</strong><br>
+                            <div class="code-example">
+                                <code>float y = abs(p.x);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>10. 제곱 곡선:</strong><br>
+                            <div class="code-example">
+                                <code>float y = p.x * p.x;</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>11. 제곱근:</strong><br>
+                            <div class="code-example">
+                                <code>float y = sqrt(p.x);</code>
+                            </div>
+                        </li>
+
+                        <li><strong>12. 사인 곡선:</strong><br>
+                            <div class="code-example">
+                                <code>p.x *= 3.14;<br>float y = sin(p.x);</code>
+                            </div>
+                        </li>
+
+                        <li><strong>13. 코사인:</strong><br>
+                            <div class="code-example">
+                                <code>p.x *= 3.14;<br>float y = cos(p.x);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>14. 탄젠트:</strong><br>
+                            <div class="code-example">
+                                <code>p.x *= 3.14;<br>float y = tan(p.x);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>15. 가우시안 곡선:</strong><br>
+                            <div class="code-example">
+                                <code>float y = exp(-p.x * p.x);</code>
+                            </div>
+                        </li>
+                        
+                        <li><strong>16. Triangular Wave (지그재그):</strong><br>
+                            <div class="code-example">
+                                <code>float y = abs(fract(p.x) * 2.0 - 1.0);</code>
+                            </div>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -234,17 +235,18 @@ float y = p.x;
                 <div class="lesson-title"> 패턴 만들기</div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
-                    패턴 모양일때 반복되는 구간의 x,y 값을 알 수 있다.(fract, floor)<br>
-                    손으로 영역을 그려보자, 헷갈리는 경우 대표하는 픽셀만 구해서 생각하자<br>
-                    복잡한 코드를 분석하는 방법을 배울수 있다. <br><br>
-                    원과 사각형 코드를 수정해서 함수를 변경 해보세요 (step->smoothstep) <br>
-                    상수에 목숨걸지말자 <br>
-
-                    <h3> 코드 분석 방법</h3>                        
-                    1) 정규화 파악 (0 ~ 1), (-0.5 ~ 0.5)<br>
-                    2) 코드 분해해서 주석 처리<br>
-                    3) 간단한 함수로 바꾸어 보기 (smoothstep → step)<br>
-                    4) 경계를 파악하고 경계를 파악 후 그려보기<br>
+                    먼저 뭘 그려야 패턴을 만들수 있기 때문에 원,사각형을 그려보자.<br><br>
+                    <h3>아래 공부 방법을 습득하자</h3> <br>
+                    0. 정규화를 확인하자.<br>
+                    1. 손으로 영역을 그려보자, 헷갈리는 경우 대표하는 픽셀만 구해서 생각하자<br>
+                    2. 복잡한 코드를 분석할때 하나씩 소거하자. <br>
+                    3. 함수를 변경 해보세요 (step->smoothstep) <br>
+                    4. 반복되는 구간의 x,y 값을 알 수 있다.(fract, floor)<br>
+                    <h2>5. 상수에 목숨걸지말자 </h2><br>
+                    
+                    Assignment<br>
+                    1) 원을 우측에 더 그려보자. <br>
+                    2) 사각형의 영역을 확인해보자 <br>
                 </div>
             </div>
             
@@ -255,7 +257,7 @@ float y = p.x;
                 </div>
                 <div class="concepts-content" id="concepts2">
                     <ul>
-                        <li><strong>원리</strong><br>
+                        <li><strong><h5>원리</h5></strong><br>
                         <img src="materials/chapter1/circle.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <li><strong>정규화</strong><br>
                             <div class="code-example">
@@ -268,7 +270,7 @@ float y = p.x;
                                     <code>uniform float2 iResolution;
 float circle(in vec2 _st, in float _radius) { 
     vec2 l = _st - vec2(0.5);
-    return 1. - step(_radius, dot(l, l) * 2.0);
+    return 1. - step(_radius, sqrt(dot(l, l)));
 }
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution.xy;    
@@ -327,7 +329,7 @@ half4 main(float2 fragCoord) {
                         <img src="materials/chapter1/box1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <img src="materials/chapter1/box2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
                         <img src="materials/chapter1/box3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <li><strong> 벡터 연산 팁</strong>
+                        <li><strong> 박스 그려보기 </strong>
                             <div class="code-example">
                                 <code>
 float rect(vec2 pt, vec2 size, vec2 center) {
@@ -348,7 +350,6 @@ vec4 main(vec2 fragCoord) {
     vec3 color = vec3(1.0, 1.0, 0.0) * rect(uv, size, center);
     return vec4(color, 1.0);
 }
-    
                                 </code>
                             </div>
                         </li>
@@ -378,7 +379,6 @@ half4 main(float2 fragCoord) {
                             </div>
                         </li>
                         <li><strong>박스 패턴 만들기</strong>      
-                            <li><strong> p.x * p.y를 출력하면, 둘다 1인 영역만 출력 !! </strong></li>               
                             <div class="code-example">                                
 <code>vec2 tile(vec2 _st, float _zoom) {
     _st *= _zoom;
@@ -403,7 +403,7 @@ half4 main(float2 fragCoord) {
 }</code>                                 
                             </div>
                         </li>
-                                                
+                        <li><strong><h3>찬석님 원 패턴 만들어보세요 !!! </h3></strong>                                                    
                         <li><strong>터틀 패턴 만들기</strong>                            
                             <div class="code-example">
                                 <code>uniform float2 iResolution;

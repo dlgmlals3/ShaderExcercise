@@ -9,7 +9,7 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p> Chapter 2. 랜덤과 노이즈 </p>
+        <p> Chapter 3. 이미지 필터링 및 활용 알고리즘 </p>
 
         <nav class="chapter-nav">
             <a href="index.html" class="chapter-btn">Chapter 1. 기본 함수 및 기본 도형 그리기 </a>
@@ -25,12 +25,12 @@
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
                     이미지 샘플링을 해보자. <br>
-
+                    이미지를 패턴화 시키면 ? <br>
                     <h3> 랜덤 함수 (해시 함수) 생성 방법</h3>                        
                     
                 </div>
             </div>
-
+            <br>그래프 그려보기 추가. <br>
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts5')">
                     <h4> 이미지 샘플링 </h4><br>                          
@@ -112,18 +112,23 @@ half4 main (float2 fragcoord) {
                 <div class="concepts-content" id="concepts6">
                     <ul>                       
                         <li><strong> 흑백 필터 </strong><br>
+                            파랑색 이미지는 실제보다 어둡게, 녹색 이미지는 실제보다 밝게 나옴.<br>
+                            // Rec.601 (0.299, 0.587, 0.114)<br>
+                            // Rec.709 (0.2126, 0.7152, 0.0722)<br>
+                            // Rec.2020 (0.2627, 0.6780, 0.0593)<br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform shader iTexture;
 
 half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
-    // 원본 색
+    
     half4 c = iTexture.eval(uv * iResolution);
-    // 가중합으로 밝기 구하기 (sRGB 기준)
-    half gray = dot(c.rgb, half3(0.299, 0.587, 0.114));
-    // 흑백으로 리턴
-    return half4(gray, gray, gray, c.a);
+    half wrong = (c.r + c.g + c.b) / 3.0;
+    half correct = dot(c.rgb, half3(0.299, 0.587, 0.114));
+    if (uv.x < 0.5) 
+        return half4(wrong, wrong, wrong, c.a);        
+    return half4(correct , correct, correct, c.a);    
 }
 </code>
                             </div>
@@ -145,7 +150,7 @@ half4 main(float2 fragCoord) {
                         </li>                        
                     </ul>
                     <ul>                       
-                        <li><strong> Tint </strong><br>
+                        <li><strong> Tint ( mix 함수를 사용해보자 ) </strong><br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform shader iTexture;

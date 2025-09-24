@@ -24,7 +24,7 @@
                 <div class="lesson-title"> 랜덤 함수 만들기</div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
-                    랜덤 함수 만들어보자.<br>
+                    랜덤 함수 만들어보자. <br>
                     랜덤 함수를 만들어지는 원리는 좋은 해시 함수를 만드는 것 <br>
                     12.9898, 78.233, 43758.5453123 과 같은 값은 마법의 상수. <br>
                     나만의 마법의 상수, 나만의 해쉬 함수를 만들어보자. <br><br>
@@ -46,7 +46,7 @@
                     <ul>                       
                         <li><strong> 랜덤 함수 </strong><br>
                             <div class="code-example">                     
-    <code>uv.x *= 6.28; <br>float y = fract(sin(uv.x)*1.0);</code>
+    <code>uv.x *= 6.28; <br>float y = fract(sin(uv.x)*1.0);<br> // 1.0 대신에 큰수를 ??</code>
                             </div>
                         <li><strong> 랜덤 함수 2 </strong><br>
                             <div class="code-example">                     
@@ -84,8 +84,7 @@ float y = p.x;
                 </div>
             </div>
 
-
-            <div class="key-concepts">
+                        <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts6')">
                     <h4> 랜덤 함수 활용 </h4><br>                    
                     <span class="toggle-icon" id="icon-concepts6">▼</span>
@@ -115,6 +114,7 @@ half4 main(float2 fragCoord) {
     vec2 fpos = fract(st);  // get the fractional coords
 
     // Assign a random value based on the integer coord
+    // 해쉬 함수 이해
     vec3 color = vec3(random( ipos ));
 
     // Uncomment to see the subdivided grid
@@ -129,6 +129,7 @@ half4 main(float2 fragCoord) {
 
                 </div>
             </div>
+            
             
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts7')">
@@ -152,7 +153,8 @@ half4 main(float2 fragCoord) {
                             </div>
                         </li>        
 
-                        <li><strong> 2D Noise 함수 </strong><br>
+                        <li><strong> 1D Noise 함수 </strong><br>
+                            + 보간 기능
                             <div class="code-example">                     
     <code>float f = fract(p.x);<br>float u = f * f * (3.0 - 2.0 * f );
 return mix(rand(p), rand(p + 1.0), u);</code>
@@ -161,6 +163,8 @@ return mix(rand(p), rand(p + 1.0), u);</code>
                     </ul>
                 </div>
             </div>
+
+
 
             <div class="lesson-content">
                 <div class="editor-section">
@@ -255,7 +259,7 @@ half4 main(float2 fragCoord) {
 </code>
                             </div>
                         </li>
-                            <li><strong> Noise 활용 2 (Fractal Noise) </strong><br>
+                            <li><strong> Noise 활용 2 (Octave Noise) </strong><br>
                             <div class="code-example">                     
     <code>uniform vec2 iResolution;
 uniform float iTime;
@@ -268,10 +272,8 @@ float noise(vec2 st) {
     vec2 i = vec2(floor(st));
     vec2 f = fract(st);    
     vec2 u = f * f * (3. - 2. * f);    
-    float ret = mix( mix( hash( i + vec2(0.0, 0.0 ) ), 
-                        hash( i + vec2(1.0, 0.0 ) ), u.x),
-                    mix( hash( i + vec2(0.0, 1.0) ),
-                        hash( i + vec2(1.0, 1.0) ), u.x), u.y);                     
+    float ret = mix( mix( hash( i + vec2(0.0, 0.0 ) ), hash( i + vec2(1.0, 0.0 ) ), u.x),
+                    mix( hash( i + vec2(0.0, 1.0) ), hash( i + vec2(1.0, 1.0) ), u.x), u.y);                     
     return ret;
 }
 
@@ -281,6 +283,7 @@ half4 main(float2 fragCoord) {
     vec3 color = vec3(0.);
     float f = 0.;
     
+    // 좌우 비교
     if (st.x < 0.) 
     {
         st += vec2(32134.5 / 3., 0);
