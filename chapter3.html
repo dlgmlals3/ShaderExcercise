@@ -24,22 +24,118 @@
                 <div class="lesson-title"> 이미지 샘플링 해보기 </div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
-                    이미지 샘플링을 해보자. <br>
-                    이미지를 패턴화 시키면 ? <br>
-                    <h3> 랜덤 함수 (해시 함수) 생성 방법</h3>                        
-                    
+                    이미지 샘플링을 해보자. (eval 함수) <br>
+                    mix 함수 사용해보자.<br>
+
+                    <br>https://thebookofshaders.com/glossary/<br>
                 </div>
             </div>
-            <br>그래프 그려보기 추가. <br>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts1')">
+                    <h4> 그래프 그려보기  ( 라이브러리 포함 ) </h4><br>                                        
+                    <span class="toggle-icon" id="icon-concepts1">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts1">
+                    <ul>                                                   
+                        <li><strong> 랜덤 함수 </strong><br>
+                            <div class="code-example">                     
+    <code>float y = mix(0.0, 1.0, p.x); </code>
+                            </div>
+                    </ul>
+                </div>
+            </div>
+
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 실습 코드</div>
+                    <textarea class="code-editor" id="editor1">
+float y = p.x;           
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(1)"> 실행</button>                     
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error1"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts5')">
-                    <h4> 이미지 샘플링 </h4><br>                          
+                    <h4> MIX 연습 </h4><br>                          
                     <span class="toggle-icon" id="icon-concepts5">▼</span>
                 </div>        
 
                 <div class="concepts-content" id="concepts5">
+                    <ul>
+                        <li><strong> Mix 함수 연습 1 ( x 축으로 블랜딩 )</strong><br>
+                            <div class="code-example">                     
+    <code>uniform float2 iResolution;
+uniform shader iTexture;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    float3 colorA = float3(1, 0, 0); // Red
+    float3 colorB = float3(0, 1, 0); // Red   
+    return mix(half4(colorA, 1.0), half4(colorB, 1.0), uv.x);
+    //return uv.x * half4(colorB, 1.0) + (1.0 - uv.x) * half4(colorA, 1.0);
+}    
+    </code>
+                            </div>
+                        </li>                        
+                    </ul>
+
+
+                    <ul>
+                        <li><strong> Mix 함수 연습 2 ( y 축으로 블랜딩 )</strong><br>
+                            <div class="code-example">                     
+    <code>uniform float2 iResolution;
+uniform shader iTexture;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    float3 colorA = float3(1, 0, 0); // Red
+    float3 colorB = float3(0, 1, 0); // GREEN   
+    return mix(half4(colorA, 1.0), half4(colorB, 1.0), uv.y);
+    //return uv.y * half4(colorB, 1.0) + (1.0 - uv.y) * half4(colorA, 1.0);
+} 
+    </code>
+                            </div>
+                        </li>                        
+                    </ul>
+
+<ul>
+                        <li><strong> Mix 함수 연습 3 ( 3개의색 블랜딩 )</strong><br>
+                            red -> green -> blue 로 블랜딩<br>
+                            red, green -> 0 ~ 0.5, green blue -> 0.5 ~ 1.0<br>
+                            <div class="code-example">                     
+    <code>uniform float2 iResolution;
+uniform shader iTexture;
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    float3 colorA = float3(1, 0, 0); // Red
+    float3 colorB = float3(0, 1, 0); // GREEN   
+    float3 colorC = float3(0, 0, 1); // BLUE   
+    float3 mixColorA = mix(colorA, colorB, uv.x * 2.);
+    float3 mixColorB = mix(colorB, colorC, (uv.x - .5) * 2.);
+    if (uv.x < 0.5) return float4(mixColorA, 1.0);
+    else return float4(mixColorB, 1.0);
+}</code>
+                            </div>
+                        </li>                        
+                    </ul>
+
                     <ul>                       
-                        <img src="materials/chapter3/image.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                        dlgmlals3 클램핑 내용 넣자. <br>
+                        <img src="materials/chapter2/bilinear_concept.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+
                         <li><strong> 이미지 샘플링 함수 </strong><br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
@@ -52,6 +148,8 @@ half4 main(float2 fragCoord) {
                             </div>
                         </li>                        
                     </ul>
+
+
                     <ul>                       
                         <li><strong> 이미지 샘플링 함수 </strong><br>
                             <div class="code-example">                     
@@ -105,17 +203,18 @@ half4 main (float2 fragcoord) {
 
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts6')">
-                    <h4> 컬러 필터 알고리즘 </h4><br>                          
+                    <h4> 흑백 필터 알고리즘 </h4><br>                          
                     <span class="toggle-icon" id="icon-concepts6">▼</span>
                 </div>        
 
                 <div class="concepts-content" id="concepts6">
                     <ul>                       
                         <li><strong> 흑백 필터 </strong><br>
-                            파랑색 이미지는 실제보다 어둡게, 녹색 이미지는 실제보다 밝게 나옴.<br>
-                            // Rec.601 (0.299, 0.587, 0.114)<br>
-                            // Rec.709 (0.2126, 0.7152, 0.0722)<br>
-                            // Rec.2020 (0.2627, 0.6780, 0.0593)<br>
+                            우리 눈에 보이는 영역은 파랑색,빨강색은 실제보다 어둡게, 녹색은 실제보다 밝게 느껴짐.<br>
+                            ITU-R Recommendation 색공간 리스트 <br>
+                            - Rec.601 (0.299, 0.587, 0.114)<br>
+                            - Rec.709 (0.2126, 0.7152, 0.0722)<br>
+                            - Rec.2020 (0.2627, 0.6780, 0.0593)<br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform shader iTexture;
@@ -124,16 +223,79 @@ half4 main(float2 fragCoord) {
     float2 uv = fragCoord / iResolution;
     
     half4 c = iTexture.eval(uv * iResolution);
-    half wrong = (c.r + c.g + c.b) / 3.0;
-    half correct = dot(c.rgb, half3(0.299, 0.587, 0.114));
+    half linear = (c.r + c.g + c.b) / 3.0;
+    half recommend = dot(c.rgb, half3(0.299, 0.587, 0.114));
     if (uv.x < 0.5) 
-        return half4(wrong, wrong, wrong, c.a);        
-    return half4(correct , correct, correct, c.a);    
+        return half4(linear, linear, linear, c.a);
+    return half4(recommend , recommend, recommend, c.a);    
 }
 </code>
                             </div>
                         </li>                        
                     </ul>
+                    <ul>                       
+                        <li><strong> 흑백 필터 연습 1 </strong><br>
+                            0~0.3 = linear, 0.3 ~ 0.6= Rec.601, 0.6~1.0 = Rec.709 <br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    
+    half4 c = iTexture.eval(uv * iResolution);
+    half linear = (c.r + c.g + c.b) / 3.0;
+    half recommend = dot(c.rgb, half3(0.299, 0.587, 0.114));
+    half recommend2 = dot(c.rgb, half3(0.2126, 0.7152, 0.0722));
+    if (uv.x < 0.3) 
+        return half4(linear, linear, linear, c.a);
+    else if (uv.x < 0.6) {
+        return half4(recommend , recommend, recommend, c.a);    
+    }
+    return half4(recommend2 , recommend2, recommend2, c.a);    
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+                    <ul>                       
+                        <li><strong> 흑백 필터 연습 2 </strong><br>
+                            Step 으로 변경 해보자.
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    
+    half4 c = iTexture.eval(uv * iResolution);
+    half4 colorA = half4(half3((c.r + c.g + c.b) / 3.0), 1.);
+    half4 colorB = half4(half3(dot(c.rgb, half3(0.299, 0.587, 0.114))), 1.);
+    half4 colorC = half4(half3(dot(c.rgb, half3(0.2126, 0.7152, 0.0722))), 1.);
+    
+    // 방법 1
+    
+    half4 color;
+    /*
+    color = mix(color, colorC, 1. - step(1., uv.x));
+    color = mix(color, colorB, 1. - step(0.6, uv.x));
+    color = mix(color, colorA, 1. - step(0.3, uv.x));
+    */
+
+    // 방법 2
+    float maskA = 1.0 - step(0.3, uv.x);                  // <0.3
+    float maskB = step(0.3, uv.x) * (1.0 - step(0.6, uv.x)); // 0.3~0.6
+    float maskC = step(0.6, uv.x);                       // >=0.6
+    color = colorA * maskA + colorB * maskB + colorC * maskC;
+
+    return color;    
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+
+
                     <ul>                       
                         <li><strong> Invert </strong><br>
                             <div class="code-example">                     
@@ -167,8 +329,63 @@ half4 main(float2 fragCoord) {
                             </div>
                         </li>                        
                     </ul>
+                </div>
+            </div>
+
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts7')">
+                    <h4> 컬러 필터 알고리즘 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts7">▼</span>
+                </div>        
+
+                <div class="concepts-content" id="concepts7">
                     <ul>                       
+                        <li><strong> Invert </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    half4 c = iTexture.eval(uv * iResolution);
+    return half4(1.0 - c.rgb, c.a);
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+                    <ul>                       
+                        <li><strong> Tint ( mix 함수를 사용해보자 ) </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+float3 tint = float3(1, 0, 0);  // (1,0,0) = red tint
+float  amount = 1;
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution;
+    half4 c = iTexture.eval(uv * iResolution);
+    c.rgb = mix(c.rgb, c.rgb * tint, amount);
+    return c;
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>
+                </div>
+            </div>
+
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts8')">
+                    <h4> 컬러 커브 알고리즘 </h4><br>                          
+                    <span class="toggle-icon" id="icon-concepts8">▼</span>
+                </div>        
+
+                <div class="concepts-content" id="concepts8">                      
                         <li><strong> Color Curve </strong><br>
+                            https://pleasefixthebug.tistory.com/entry/Catmull-Rom-Splines
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform shader iTexture;
@@ -222,6 +439,7 @@ half4 main(float2 fragCoord) {
                     </ul>
                 </div>
             </div>
+
             <div class="lesson-content">
                 <div class="editor-section">
                     <div class="section-header">SKSL 코드</div>
