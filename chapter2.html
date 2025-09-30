@@ -272,8 +272,8 @@ float noise(vec2 st) {
     vec2 i = vec2(floor(st));
     vec2 f = fract(st);    
     vec2 u = f * f * (3. - 2. * f);    
-    float ret = mix( mix( hash( i + vec2(0.0, 0.0 ) ), hash( i + vec2(1.0, 0.0 ) ), u.x),
-                    mix( hash( i + vec2(0.0, 1.0) ), hash( i + vec2(1.0, 1.0) ), u.x), u.y);                     
+    float ret = mix( mix(hash(i + vec2(0.0, 0.0)), hash(i+vec2(1.0,0.0)), u.x),
+                    mix(hash(i + vec2(0.0, 1.0)), hash(i+vec2(1.0,1.0)), u.x), u.y);                     
     return ret;
 }
 
