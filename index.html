@@ -9,19 +9,23 @@
 <body>
     <div class="header">
         <h1> SKSL 셰이더 교육 자료</h1>
-        <p>Chapter 1. 주요 함수 및 기본 도형 그리기 </p>
+        <p>Chapter 0. 시작하면서 ...</p>
 
         <nav class="chapter-nav">
-            <a href="index.html" class="chapter-btn active">Chapter 1. 기본 함수 및 기본 도형 그리기 </a>
-            <a href="chapter2.html" class="chapter-btn">Chapter 2. 랜덤 함수와 노이즈 함수 </a>
-            <a href="chapter3.html" class="chapter-btn">Chapter 3. 이미지 필터링 및 활용 알고리즘 </a>
+            <a href="index.html" class="chapter-btn active"> 0. 시작하면서</a>
+            <a href="chapter1.html" class="chapter-btn">1. 기본 도형과 패턴
+            <a href="chapter2.html" class="chapter-btn">2. 기본 도형 회전 이동 확대
+            <a href="chapter3.html" class="chapter-btn">3. 랜덤 함수와 노이즈 함수 </a><br>
+            <a href="chapter4.html" class="chapter-btn">4. Fractal </a>
+            <a href="chapter5.html" class="chapter-btn">5. 이미지 필터링 및 컬러 커브 </a>
+            <a href="chapter6.html" class="chapter-btn">6. 블러 알고리즘 </a>
         </nav>
     </div>
 
     <div class="container">
         <div class="lesson">
             <div class="lesson-header">
-                <div class="lesson-title"> 자주 사용하는 함수를 사용해보자. </div>
+                <div class="lesson-title"> SKSL 기본 함수 익히기 </div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>                    
                     아래 사이트는 canvasKit을 사용하여 직접 만들었습니다. <br>
@@ -225,272 +229,6 @@ float y = p.x;
                     <div class="preview-container">
                         <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
                         <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="lesson">
-            <div class="lesson-header">
-                <div class="lesson-title"> 패턴 만들기</div>
-                <div class="lesson-description">
-                    <h3> 학습 목표</h3>
-                    먼저 뭘 그려야 패턴을 만들수 있기 때문에 원,사각형을 그려보자.<br><br>
-                    <h3>아래 공부 방법을 습득하자</h3> <br>
-                    0. 정규화를 확인하자.<br>
-                    1. 손으로 영역을 그려보자, 헷갈리는 경우 대표하는 픽셀만 구해서 생각하자<br>
-                    2. 복잡한 코드를 분석할때 하나씩 소거하자. <br>
-                    3. 함수를 변경 해보세요 (step->smoothstep) <br>
-                    4. 반복되는 구간의 x,y 값을 알 수 있다.(fract, floor)<br>
-                    <h2>5. 상수에 목숨걸지말자 </h2><br>
-                    
-                    Assignment<br>
-                    1) 원을 우측에 더 그려보자. <br>
-                    2) 사각형의 영역을 확인해보자 <br>
-                </div>
-            </div>
-            
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts2')">
-                    <h4>원 만들기</h4>
-                    <span class="toggle-icon" id="icon-concepts2">▼</span>
-                </div>
-                <div class="concepts-content" id="concepts2">
-                    <ul>
-                        <li><strong><h5>원리</h5></strong><br>
-                        <img src="materials/chapter1/circle.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <li><strong>정규화</strong><br>
-                            <div class="code-example">
-                                <code>float2 uv = fragCoord / iResolution.xy;</code>
-                            </div>
-                        </li>
-                        
-                        <li><strong>원을 만드는 코드 1</strong>                            
-                                <div class="code-example">
-                                    <code>uniform float2 iResolution;
-float circle(in vec2 _st, in float _radius) { 
-    vec2 l = _st - vec2(0.5);
-    return 1. - step(_radius, sqrt(dot(l, l)));
-}
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution.xy;    
-    float color = circle(uv, 0.3);
-    return half4(color, color, color, 1.0);
-}</code>
-                            </div>
-                        </li>
-
-                        <li><strong>원을 만드는 코드 2</strong>                            
-                            <div class="code-example">
-                                <code>uniform float2 iResolution;
-float circle(in vec2 _st, in float _radius) {     
-    float edge0 = _radius - (_radius * 0.01);
-    float edge1 = _radius + (_radius * 0.01);
-    return 1. - smoothstep(edge0, edge1, sqrt(dot(_st, _st)));
-}
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution.xy  - .5;
-    float color = circle(uv, 0.3);
-    return half4(color, color, color, 1.0);
-}</code>
-                            </div>
-                        </li>
-
-                        <li><strong>원을 만드는 코드 3</strong>                                                        
-                            <div class="code-example">
-                                <code>uniform float2 iResolution;
-float circle(in vec2 _st, in float _radius) {     
-    return 1. - smoothstep(_radius - (_radius * 0.01), 
-                          _radius + (_radius * 0.01), 
-                          dot(_st, _st) * 2.0);
-}
-half4 main(float2 fragCoord) {
-    float2 uv = (fragCoord / iResolution.xy) - .5;    
-    float color = circle(uv, 0.3);
-    return half4(color, color, color, 1.0);
-}</code>                             
-                            </div>
-                        </li>        
-                    </ul>
-                </div>
-            </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts3')">
-                    <h4> 박스 만들기 </h4>
-                    <span class="toggle-icon" id="icon-concepts3">▼</span>
-                </div>
-                <div class="concepts-content" id="concepts3">
-                    <li><strong>원리</strong><br>
-                        <li><strong>p.x * p.y 의미는 x, y 둘다 1인 영역만 1로, 나머지 0 </strong><br>
-                        <li><strong>아래 그림은 step(dl, pt)와 (1. - step(ur, pt)) 를 나타낸 것이다. </strong><br>
-                    </li>
-                    <ul>
-                        <img src="materials/chapter1/box1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <img src="materials/chapter1/box2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <img src="materials/chapter1/box3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <li><strong> 박스 그려보기 </strong>
-                            <div class="code-example">
-                                <code>
-float rect(vec2 pt, vec2 size, vec2 center) {
-    vec2 dl = center - (size * 0.5);
-    vec2 ur = center + (size * 0.5);
-    vec2 result = step(dl, pt) * (1.0 - step(ur, pt));
-    return result.x * result.y;
-}
-uniform float2 iResolution;
-vec4 main(vec2 fragCoord) {
-    vec2 uv = fragCoord / iResolution.xy; 
-    uv.y *= iResolution.y / iResolution.x;  // 종횡비 보정
-    uv.y = 1.0 - uv.y;
-    uv -= .5; // -.5 ~ .5 정규화
-
-    vec2 size = vec2(0.2, 0.2);
-    vec2 center = vec2(0., 0.);
-    vec3 color = vec3(1.0, 1.0, 0.0) * rect(uv, size, center);
-    return vec4(color, 1.0);
-}
-                                </code>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
-                    <h4> 패턴 만들기 </h4>
-                    <span class="toggle-icon" id="icon-concepts4">▼</span>
-                </div>
-                <div class="concepts-content" id="concepts4">
-                    <ul>
-                        <img src="materials/chapter1/pattern.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;">
-                        <li><strong>기본 패턴 만들기 </strong>
-
-                            <div class="code-example">
-                                <code>uniform float2 iResolution;
-half4 main(float2 fragCoord) {
-    float2 uv = (fragCoord / iResolution.xy);    
-    uv *= 3.0;
-    uv = fract(uv);
-    float3 color = float3(uv, 0.0);
-    return half4(color, 1.0);
-}</code>                            
-                            </div>
-                        </li>
-                        <li><strong>박스 패턴 만들기</strong>      
-                            <div class="code-example">                                
-<code>vec2 tile(vec2 _st, float _zoom) {
-    _st *= _zoom;
-    return fract(_st);
-}
-
-float box(vec2 _st, vec2 _size, float _smoothEdges){
-    _size = vec2(0.5) - _size * 0.5;
-    vec2 aa = vec2(_smoothEdges * 0.5);
-    vec2 uv = smoothstep(_size, _size + aa, _st);
-    uv *= smoothstep(_size, _size + aa, vec2(1.0) - _st);
-    return uv.x * uv.y;
-}     
-
-uniform float2 iResolution;    
-half4 main(float2 fragCoord) {
-    vec2 st = fragCoord.xy / iResolution.xy;
-    vec3 color = vec3(0.0);
-    st = tile(st, 4.);
-    color = vec3(box(st, vec2(0.7), 0.01));
-    return vec4(color,1.0);
-}</code>                                 
-                            </div>
-                        </li>
-                        <li><strong><h3>찬석님 원 패턴 만들어보세요 !!! </h3></strong>                                                    
-                        <li><strong>터틀 패턴 만들기</strong>                            
-                            <div class="code-example">
-                                <code>uniform float2 iResolution;
-const float PI = 3.141592;
-float2 rotate2D (vec2 _st, float _angle) {
-    _st -= 0.5;
-    _st =  mat2(cos(_angle),-sin(_angle),
-                sin(_angle),cos(_angle)) * _st;
-    _st += 0.5;
-    return _st;
-}
-
-float2 tile (vec2 _st, float _zoom) {
-    _st *= _zoom;
-    return fract(_st);
-}
-
-float2 rotateTilePattern(float2 _st){
-    //  Scale the coordinate system by 2x2
-    _st *= 2.0;
-    
-    //  Give each cell an index number
-    //  according to its position
-    float index = 0.0;
-    index += step(1., mod(_st.x, 2.0));
-    index += step(1., mod(_st.y, 2.0)) * 2.0;
-
-    //      |
-    //  2   |   3
-    //      |
-    //--------------
-    //      |
-    //  0   |   1
-    //      |
-    // Make each cell between 0.0 - 1.0
-    _st = fract(_st);
-    // Rotate each cell according to the index
-    if(index == 1.0){
-        //  Rotate cell 1 by 90 degrees
-        _st = rotate2D(_st,PI * 0.5);
-    } else if(index == 2.0){
-        //  Rotate cell 2 by -90 degrees
-        _st = rotate2D(_st,PI * -0.5);
-    } else if(index == 3.0) {
-        //  Rotate cell 3 by 180 degrees
-        _st = rotate2D(_st, PI);
-    }
-    return _st;
-}
-
-half4 main(float2 fragCoord) {
-    vec2 st = fragCoord.xy / iResolution.xy;
-
-    st = tile(st, 3.0);
-    st = rotateTilePattern(st);
-
-    // step(st.x,st.y) just makes a b&w triangles
-    // but you can use whatever design you want.
-    return half4(half3(step(st.x,st.y)), 1.0);
-}
-                                </code>                                 
-                            </div>
-                        </li>
-
-                        <li><strong> Fractal, 회전,이동,스케일 행렬은 추후에 </strong></li>
-                    </ul>
-                </div>
-            </div>
-
-            <div class="lesson-content">
-                <div class="editor-section">
-                    <div class="section-header">SKSL 실습 코드</div>
-                    <textarea class="code-editor" id="editor2">uniform float2 iResolution;
-half4 main(float2 fragCoord) {
-    return half4(1.0);
-}</textarea>
-                    <div class="controls">
-                        <button class="btn" onclick="compileShader(2)">실행</button>
-                    </div>
-                </div>
-                
-                <div class="preview-section">
-                    <div class="section-header">미리보기</div>
-                    <div id="error2"></div>
-                    <div class="preview-container">
-                        <div class="loading" id="loading2">CanvasKit 로딩 중...</div>
-                        <canvas class="preview-canvas" id="canvas2" width="300" height="300" style="display: none;"></canvas>
                     </div>
                 </div>
             </div>
