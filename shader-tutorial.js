@@ -182,7 +182,8 @@ function clearError(lessonNum) {
 function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
     return `
     uniform float2 iResolution;
-
+    uniform float iTime;
+    
     float rand(float2 uv) { 
         return fract(sin(dot(uv.xy, vec2(12.9898,78.233))) * 43758.5453123);
     }
