@@ -19,6 +19,7 @@
             <a href="chapter4.html" class="chapter-btn">4. Fractal </a>
             <a href="chapter5.html" class="chapter-btn">5. 이미지 필터링 및 컬러 커브 </a>
             <a href="chapter6.html" class="chapter-btn active">6. 블러 알고리즘 </a>
+            <a href="chapter7.html" class="chapter-btn">7. 멀티 패스 </a>
         </nav>
     </div>
 
@@ -28,10 +29,7 @@
                 <div class="lesson-title"> 이미지 샘플링 해보기 </div>
                 <div class="lesson-description">
                     <h3> 학습 목표</h3>
-                    이미지 샘플링을 해보자. (eval 함수) <br>
-                    mix 함수 사용해보자.<br>
-
-                    <br>https://thebookofshaders.com/glossary/<br>
+                    가우시안 블러 알고리즘 만들어보기<br>
                 </div>
             </div>
 
@@ -44,62 +42,12 @@
                     <ul>                                                   
                         <li><strong> 랜덤 함수 </strong><br>
                             <div class="code-example">                     
-    <code> // Catmull-Rom-Splines
-float y = 0;
-float4 control = float4(0.0, 0.15, 0.85, 1.0); // R 채널
-if (p.x < 1.0/3.0) {
-    // 구간1: y0 -> y1  (p0=y0, p1=y0, p2=y1, p3=y2)
-    float t  = p.x * 3.0;
-    float t2 = t * t;
-    float t3 = t2 * t;
-
-    float p0 = control.x;
-    float p1 = control.x;
-    float p2 = control.y;
-    float p3 = control.z;
-
-    y = 0.5 * ( (2.0*p1)
-              + (-p0 + p2) * t
-              + (2.0*p0 - 5.0*p1 + 4.0*p2 - p3) * t2
-              + (-p0 + 3.0*p1 - 3.0*p2 + p3) * t3 );
-}
-else if (p.x < 2.0/3.0) {
-    // 구간2: y1 -> y2  (p0=y0, p1=y1, p2=y2, p3=y3)
-    float t  = p.x * 3.0 - 1.0;
-    float t2 = t * t;
-    float t3 = t2 * t;
-
-    float p0 = control.x;
-    float p1 = control.y;
-    float p2 = control.z;
-    float p3 = control.w;
-
-    y = 0.5 * ( (2.0*p1)
-              + (-p0 + p2) * t
-              + (2.0*p0 - 5.0*p1 + 4.0*p2 - p3) * t2
-              + (-p0 + 3.0*p1 - 3.0*p2 + p3) * t3 );
-}
-else {
-    // 구간3: y2 -> y3  (p0=y1, p1=y2, p2=y3, p3=y3)
-    float t  = p.x * 3.0 - 2.0;
-    float t2 = t * t;
-    float t3 = t2 * t;
-
-    float p0 = control.y;
-    float p1 = control.z;
-    float p2 = control.w;
-    float p3 = control.w;
-
-    y = 0.5 * ( (2.0*p1)
-              + (-p0 + p2) * t
-              + (2.0*p0 - 5.0*p1 + 4.0*p2 - p3) * t2
-              + (-p0 + 3.0*p1 - 3.0*p2 + p3) * t3 );
-}</code>
+    <code>float sigma = 0.2;   
+float y = exp(-(p.x*p.x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);</code>
                             </div>
                     </ul>
                 </div>
             </div>
-
 
             <div class="lesson-content">
                 <div class="editor-section">
@@ -122,452 +70,283 @@ float y = p.x;
                 </div>
             </div>
 
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
-                    <h4> 함수 연습 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts4">▼</span>
-                </div>        
-
-                <div class="concepts-content" id="concepts4">
-                    <ul>
-                        <li><strong> Mix 함수 연습 1 ( x 축으로 블랜딩 )</strong><br>
-                            https://thebookofshaders.com/glossary/?search=mix<br>
-                            <div class="code-example">                     
-    <code>uniform float2 iResolution;
-uniform shader iTexture;
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    float3 colorA = float3(1, 0, 0); // Red
-    float3 colorB = float3(0, 1, 0); // Green   
-    return mix(half4(colorA, 1.0), half4(colorB, 1.0), uv.x);
-    //return uv.x * half4(colorB, 1.0) + (1.0 - uv.x) * half4(colorA, 1.0);
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-
-
-                    <ul>
-                        <li><strong> Mix 함수 연습 2 ( y 축으로 블랜딩 )</strong><br>
-                            <div class="code-example">                     
-    <code>uniform float2 iResolution;
-uniform shader iTexture;
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    float3 colorA = float3(1, 0, 0); // Red
-    float3 colorB = float3(0, 1, 0); // GREEN   
-    return mix(half4(colorA, 1.0), half4(colorB, 1.0), uv.y);
-    //return uv.y * half4(colorB, 1.0) + (1.0 - uv.y) * half4(colorA, 1.0);
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-
-<ul>
-                        <li><strong> Mix 함수 연습 3 ( 3개의색 블랜딩 )</strong><br>
-                            <h2> 실습 </h2><br>                           
-                            정규화 영역 [0~0.5] red, green 보간 <br>
-                            정규화 영역 [0.5~1.0] green blue 보간<br><br>
-                            <img src="materials/chapter3/interpolation.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-                            <div class="code-example">                     
-    <code>uniform float2 iResolution;
-uniform shader iTexture;
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    float3 colorA = float3(1, 0, 0); // Red
-    float3 colorB = float3(0, 1, 0); // GREEN   
-    float3 colorC = float3(0, 0, 1); // BLUE   
-    float3 mixColorA = mix(colorA, colorB, clamp(uv.x * 2., 0., 1.));
-    
-    float3 mixColorB = mix(colorB, colorC, clamp((uv.x - .5) * 2., 0., 1.));
-    if (uv.x < 0.5) return float4(mixColorA, 1.0);
-    else return float4(mixColorB, 1.0);
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                </div>
-            </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
-                    <h4> 이미지 필터 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts5">▼</span>
-                </div>        
-
-                <div class="concepts-content" id="concepts5">
-                    <ul>                       
-                        <img src="materials/chapter3/tilemode1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-                        <img src="materials/chapter3/tilemode2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-
-                        <li><strong> 이미지 샘플링 함수 </strong><br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    return iTexture.eval(uv * iResolution);
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-
-                    <ul>                       
-                        <li><strong> 이미지 샘플링 사용한 이펙트 </strong><br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform float  iTime;
-uniform shader iTexture;
-float PI = 3.141592;
-
-float random (in vec2 st) {
-    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-}
-
-float noise (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-}
-
-half4 main (float2 fragcoord) {
-    vec2 st = fragcoord.xy/iResolution.xy;
-
-    float scale = 2.0;
-    float offset = 0.5;
-
-    float angle = noise( st + iTime * 0.1 ) * PI;
-    float radius = offset;
-
-    st *= scale;
-    st += radius * vec2(cos(angle),sin(angle));
-    
-    vec4 color = iTexture.eval(st * iResolution);
-    return color;
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                </div>
-            </div>
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts6')">
-                    <h4> 흑백 필터 알고리즘 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts6">▼</span>
-                </div>        
-
-                <div class="concepts-content" id="concepts6">
-                    <ul>                       
-                        <li><strong> 흑백 필터 </strong><br>
-                            < 휘도 계산 Luminance > <br>
-                            RGB(255, 0, 0)인 빨강, RGB(0, 255, 0)인 녹색,  RGB(0, 0, 255)인 파랑은 모두 동일한 강도(255)를 가짐 <br>
-                            우리 눈에는 녹색이 가장 밝아 보이고 파랑이 가장 어두워 보인다. <br>
-                            이는 인간의 눈이 색상별로 느끼는 밝기 감도가 다르기 때문이며, <br>
-                            어떤 색이 **“얼마나 밝게 보이는가”**를 수치로 나타낸 값을 **휘도(Luminance)**라고 한다. <br>
-
-                            그레이 스케일이 뭘까요 ? <br><br>
-
-                            흑백 변환, 커브 조정, 비네팅 등의 밝기 기반 필터를 구현할 때는, <br>
-                            픽셀의 색을 직접 사용하는 대신 샘플링한 색상을 휘도로 변환해 사용하는 것이 일반적이다.<br><br>
-                            ITU-R Recommendation 색공간 감도 계수 (가중치) <br>
-                            세 값을 더하면 1이 되는 정규화 과정을 거친 값들임.<br><br>
-                            - Rec.601 (0.299, 0.587, 0.114)<br>
-                            - Rec.709 (0.2126, 0.7152, 0.0722)<br>
-                            - Rec.2020 (0.2627, 0.6780, 0.0593)<br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    
-    half4 c = iTexture.eval(uv * iResolution);
-    half linear = (c.r + c.g + c.b) / 3.0;
-    half recommend = dot(c.rgb, half3(0.299, 0.587, 0.114));
-    if (uv.x < 0.5) 
-        return half4(linear, linear, linear, c.a);
-    return half4(recommend , recommend, recommend, c.a);    
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    <ul>                       
-                        <li><strong> 흑백 필터 연습 1 </strong><br>
-                            <h2> 실습 </h2><br>                           
-                            아래 영역에서 해당하는 색공간 휘도 계산해서 흑백으로 표현해봅시다 (3개의 영역이 나와야 합니다) <br>
-                            0 ~ 0.3 = linear, 0.3 ~ 0.6= Rec.601, 0.6 ~ 1.0 = Rec.709 <br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    
-    half4 c = iTexture.eval(uv * iResolution);
-    half linear = (c.r + c.g + c.b) / 3.0;
-    half recommend = dot(c.rgb, half3(0.299, 0.587, 0.114));
-    half recommend2 = dot(c.rgb, half3(0.2126, 0.7152, 0.0722));
-    if (uv.x < 0.3) 
-        return half4(linear, linear, linear, c.a);
-    else if (uv.x < 0.6) {
-        return half4(recommend , recommend, recommend, c.a);    
-    }
-    return half4(recommend2 , recommend2, recommend2, c.a);    
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    <ul>                       
-                        <li><strong> 흑백 필터 연습 2 </strong><br>
-                            <h2> 실습 </h2><br>           
-                            If 문을 Step 으로 변경 해보자.
-                            Step을 사용하면 0 또는 1의 값만 나오기 때문에, 
-                            mix 함수를 사용하게 되면 조건문 처럼 사용가능. <br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    
-    half4 c = iTexture.eval(uv * iResolution);
-    half4 colorA = half4(half3((c.r + c.g + c.b) / 3.0), 1.);
-    half4 colorB = half4(half3(dot(c.rgb, half3(0.299, 0.587, 0.114))), 1.);
-    half4 colorC = half4(half3(dot(c.rgb, half3(0.2126, 0.7152, 0.0722))), 1.);
-    
-    // 방법 1 순차적 mix 방법
-    half4 color;
-    color = colorC;
-    color = mix(color, colorB, 1. - step(0.6, uv.x));
-    color = mix(color, colorA, 1. - step(0.3, uv.x));
-
-    // 방법 2 마스킹 방법
-    float maskA = 1.0 - step(0.3, uv.x); // ~ 0.3
-    float maskB = step(0.3, uv.x) * (1.0 - step(0.6, uv.x)); // 0.3 ~ 0.6
-    float maskC = step(0.6, uv.x);  //  0.6 ~
-    color = colorA * maskA + colorB * maskB + colorC * maskC;
-
-    return color;    
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-
-                </div>
-            </div>
-
-
-            <div class="key-concepts">
-                <div class="concepts-header" onclick="toggleConcepts('concepts7')">
-                    <h4> 컬러 필터 알고리즘 </h4><br>                          
-                    <span class="toggle-icon" id="icon-concepts7">▼</span>
-                </div>        
-
-                <div class="concepts-content" id="concepts7">
-                    <ul>                       
-                        <li><strong> Invert </strong><br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 c = iTexture.eval(uv * iResolution);
-    return half4(1.0 - c.rgb, c.a);
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    <ul>                       
-                        <li><strong> Tint </strong><br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-float3 tint = float3(1, 0, 0);  // (1,0,0) = red tint
-float  amount = 1;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 c = iTexture.eval(uv * iResolution);
-    c.rgb = mix(c.rgb, c.rgb * tint, amount);
-    return c;
-}
-</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    <ul>                       
-                        <li><strong> Vinete Effect 1 </strong><br>
-                            <img src="materials/chapter3/vinette.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 color = iTexture.eval(uv * iResolution);
-    half vignette = 1. - smoothstep(0.2, 0.5, length(uv - 0.5));
-    return half4(color.rgb * vignette, color.a);
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    <ul>                       
-                        <li><strong> Vinete Effect 2 </strong><br>
-                            Vinete Effect 1의 경우는 동일한 픽셀에 비네팅 강도 적용<br>
-                            어두움 픽셀도 밝은 픽셀도 똑같이 어두워 짐으로, 명암 대비 안좋고 어두움 픽셀은 더 어두워지는 경향.<br>
-                            휘도를 사용하여 어두운 곳은 덜어둡고, 밝은곳은 더 어둡게 처리<br>
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 color = iTexture.eval(uv * iResolution);
-
-    half base = 1.0 - smoothstep(0.2, 0.5, length(uv - 0.5));
-    //return half4(color.rgb * base , color.a);
-
-    half luma = dot(color.rgb, half3(0.2126, 0.7152, 0.0722));
-    half strength = mix(0.2, 2.2, luma);
-    half vignette = pow(base, strength);
-
-    return half4(color.rgb * vignette, color.a);
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                </div>
-            </div>
-
-
             <div class="key-concepts">
                 <div class="concepts-header" onclick="toggleConcepts('concepts8')">
-                    <h4> 컬러 커브 알고리즘 </h4><br>                          
+                    <h4> 가우시안 블러 알고리즘 </h4><br>            
                     <span class="toggle-icon" id="icon-concepts8">▼</span>
                 </div>        
                 <div class="concepts-content" id="concepts8">        
-                    <ul>
-                        <li><strong> Color Curve 기초 </strong><br>
-                            컬러 커브를 사용하는 이유는 사진을 선명하게 만드는 것 <br>
-                            즉 채도는 높게 해야 한다. <br>
-                            채도를 높이기 위해 중간값 밝게, 어두운 값 어둡게 <br>
-                            <img src="materials/chapter3/curve.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
-                            <div class="code-example">                     
+                    <ul><br>
+                    가우시안 블러는 가우시안 필터를 사용한 블러 알고리즘 입니다.<br><br>
+                    <img src="materials/chapter6/gausian2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                    기본적인 평균 필터의 경우, 대상 점 주변의 픽셀 값을 모두 동일한 가중치로 평균내어 블러 효과를 만듭니다.<br>
+                    하지만 이러한 특성은 대상 점과 가까운 픽셀이 먼 픽셀보다 더 연관이 있다는 사실을 반영하지 못합니다.<br>
+                    가까운 픽셀에 더 많은 가중치를 줄 필요가 있습니다.<br>
+                    아래 보이는 표는 가우시안 커널 5x5의 예시 입니다.<br><br>
+                    <img src="materials/chapter6/gausian1.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+
+                    <h3>파라메터인 가우시안 함수 x(dist), Sigma, radius 대해서 알아 봅니다</h3><br>
+                    x는 소스 픽셀과 대상 픽셀과의 거리입니다.<br>
+                    블러의 Radius는 블러의 범위를 결정합니다. Radius가 클수록 더 넓은 영역의 픽셀을 고려하여 블러 효과를 만듭니다.<br>
+                    블러의 Radius는 커널 사이즈를 결정하며, Radius * 2 + 1 이 커널 크기가 됩니다<br>
+                    예를 들어 3이면 7x7 커널이 됩니다.<br>
+                    Sigma는 가우시안 함수의 표준 편차를 나타내며, 블러의 강도를 조절합니다. <br>                    
+                    Sigma가 클수록 블러 효과가 더 부드럽고 넓게 퍼집니다.<br>
+                    그래서 radius와 sigma는 비례 관계에 있습니다. <br>
+                    sigma 값이 2만 넘어도 그래프가 평탄해 집니다.<br>
+                    실제 블러 코드에서는 radius 값이 크게 되어도, 커널 사이즈와, 시그마 값은 고정이고 다운샘플 방식으로 처리가 됩니다.<br><br>
+                    <img src="materials/chapter6/gausian3.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                    Assignment <br>
+                    1. 위에서 가우시안 그래프를 그려 봅니다.<br>
+                    2. Blur Radius가 20이면 샘플링 개수는 ?? <br><br>
+                    <li><h3><strong> 가우시안 블러 알고리즘 코드 </strong></h3><br>
+                    <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform shader iTexture;
+uniform float  blurRadius;
 
-half curve(half x) {  
-    return x * x * (3.0 - 2.0 * x);
-    // return smoothstep(0.0, 1.0, x);
+float gaussian(float x, float sigma) {
+    return exp(-(x*x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);
 }
+
 half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 color = iTexture.eval(uv * iResolution);
+    const int MAX_RADIUS = 20;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+    float sigma = max(r, 1.0) * 0.33;
 
-    // 각 채널에 커브 적용
-    color.r = curve(color.r);
-    color.g = curve(color.g);
-    color.b = curve(color.b);
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
 
-    return color;
-}</code>
-                            </div>
-                        </li>                        
-                    </ul>
-                    
-                    <ul>
-                        <li><strong> Color Curve </strong><br>
-                            https://pleasefixthebug.tistory.com/entry/Catmull-Rom-Splines
-                            <div class="code-example">                     
-<code>uniform float2 iResolution;
-uniform shader iTexture;
+    for (int x = -MAX_RADIUS; x <= MAX_RADIUS; ++x) {
+        for (int y = -MAX_RADIUS; y <= MAX_RADIUS; ++y) {
+            float2 off = float2(float(x), float(y));
+            float dist = length(off);
+            if (dist > r) continue;
 
-// 각 채널 y값 (x는 0, 1/3 ,2/3, 1 고정)
-//float4 curveRY = float4(0.00, 0.33, 0.66, 1.0); // R 채널
-//float4 curveGY = float4(0.00, 0.33, 0.66, 1.0); // G 채널
-//float4 curveBY = float4(0.00, 0.33, 0.66, 1.0); // B 채널
-
-float4 curveRY = float4(0.05, 0.15, 0.85, 1.0); // R 채널
-float4 curveGY = float4(0.05, 0.20, 0.90, 1.0); // G 채널
-float4 curveBY = float4(0.05, 0.10, 0.80, 1.0); // B 채널
-
-half catmull(float p0, float p1, float p2, float p3, float t) {
-    // 표준 Catmull-Rom (tension=0.5 근사; 여기선 표준계수)
-    float t2 = t*t, t3 = t2*t;
-    return 0.5 * ( (2.0*p1) +
-                   (-p0 + p2) * t +
-                   (2.0*p0 - 5.0*p1 + 4.0*p2 - p3) * t2 +
-                   (-p0 + 3.0*p1 - 3.0*p2 + p3) * t3 );
-}
-
-half evalCurve(float x, float4 y) {
-    x = clamp(x, 0.0, 1.0);
-    // 구간: [0, 1/3], [1/3, 2/3], [2/3, 1]
-    if (x < 1.0/3.0) {
-        float t = x * 3.0;
-        return catmull(y.x, y.x, y.y, y.z, t);
-    } else if (x < 2.0/3.0) {
-        float t = x * 3.0 - 1.0;
-        return catmull(y.x, y.y, y.z, y.w, t);
-    } else {
-        float t = x * 3.0 - 2.0;
-        return catmull(y.y, y.z, y.w, y.w, t);
+            float w = gaussian(dist, sigma);
+            color += iTexture.eval(fragCoord + off) * w;
+            totalWeight += w;
+        }
     }
-}
-
-half3 applyCurve(half3 c) {
-    half r = clamp( evalCurve(c.r, curveRY), 0., 1. );
-    half g = clamp( evalCurve(c.g, curveGY), 0., 1. );
-    half b = clamp( evalCurve(c.b, curveBY), 0., 1. );
-    return half3(r,g,b);
-}
-
-half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    half4 c = iTexture.eval(uv * iResolution);
-    half3 o = applyCurve(c.rgb);
-    // return c;
-    return half4(o, c.a);
+    return color / max(totalWeight, 1e-6);
 }</code>
                             </div>
                         </li>                        
-                    </ul>
+                    </ul>                  
                 </div>
             </div>
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts3')">
+                    <h4> 투 패스 가우시안 블러 알고리즘 </h4><br>            
+                    <span class="toggle-icon" id="icon-concepts3">▼</span>
+                </div>        
+                <div class="concepts-content" id="concepts3">        
+                    <ul><br>
+                    투 패스 가우시안 블러는 가우시안 필터 성능 개선하기 위한 기법입니다.<br>
+                    가우시안 블러는 각 픽셀에 대해 가우시안 커널을 사용하기 때문에 가우시안 커널 크기가 커지게 되면 많은 샘플링을 수행 합니다. <br>
+                    가우시안 블러를 두 번에 나누어서 적용하는 방식입니다.<br>
+                    가로로 픽셀의 대해서만 가우시안 블러를 적용한 후, 해당 결과를 세로로 픽셀에 대해서만 가우시안 블러를 적용합니다.<br>
+                    // TODO two pass 가우시안 알고리즘 link 
+                    Blur Radius가 20이면 샘플링 개수는 ??<br><br>
+                    <img src="materials/chapter6/gausian4.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                    <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+uniform float  blurRadius;
 
+float gaussian(float x, float sigma) {
+    return exp(-(x*x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);
+}
+
+half4 horizontalBlur(float2 fragCoord, float sigma, int radius) {
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
+    const int MAX_RADIUS = 20;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+    
+    for (int x = -MAX_RADIUS; x <= MAX_RADIUS; ++x) {
+        float2 off = float2(float(x), 0.0);
+        float dist = abs(float(x));
+        if (dist > r) continue;
+
+        float w = gaussian(dist, sigma);
+        color += iTexture.eval(fragCoord + off) * w;
+        totalWeight += w;
+    }
+    return color / max(totalWeight, 1e-6);
+}
+
+half4 verticalBlur(float2 fragCoord, float sigma, int radius) {
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
+    const int MAX_RADIUS = 20;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+
+    for (int y = -MAX_RADIUS; y <= MAX_RADIUS; ++y) {
+        float2 off = float2(0.0, float(y));
+        float dist = abs(float(y));
+        if (dist > r) continue;
+
+        float w = gaussian(dist, sigma);
+        color += iTexture.eval(fragCoord + off) * w;
+        totalWeight += w;
+    }
+    return color / max(totalWeight, 1e-6);
+}
+
+half4 main(float2 fragCoord) {
+    const int MAX_RADIUS = 20;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+    float sigma = max(r, 1.0) * 0.33;
+
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
+    // two pass 알고리즘 아님..각 파이프라인의 결과만 보기 위함.
+    //color = horizontalBlur(fragCoord, sigma, int(r));
+    //color = verticalBlur(fragCoord, sigma, int(r));
+
+    return color;
+}
+</code>
+                            </div>
+                        </li>                        
+                    </ul>                  
+                </div>
+            </div>
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
+                    <h4> Down Scale, Up Scale </h4><br>            
+                    <span class="toggle-icon" id="icon-concepts4">▼</span>
+                </div>        
+                <div class="concepts-content" id="concepts4">        
+                    <ul><br>
+                    blur radius가 작은 경우는 큰 문제가 없지만, <br>
+                    blur radius가 커지면 커널 사이즈와 시그마 값이 커져서 샘플링 개수가 많아져서 성능이 떨어 집니다.<br>
+                    이를 해결하기 위한 방법이 다운샘플링과 업샘플링 입니다.<br>
+                    이미지를 다운 스케일을 하여 이미지 해상도를 낮춘 뒤, 낮은 시그마 값과 커널 사이즈로 블러를 적용한 후, <br>
+                    다시 업 스케일을 하여 원래 해상도로 복원하는 방법입니다.<br><br>
+                    <h3>Down Scale</h3> <br>
+                    <img src="materials/chapter6/downscale.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                    <div class="code-example">                     
+<code>uniform shader iTexture;
+uniform float2 iResolution;
+
+half4 main(float2 fragCoord) {
+    float  scale = 4.;           // 다운스케일 배율 (2.0 = 1/2, 4.0 = 1/4)
+    float2 srcCoordCenter = (fragCoord + 0.5) * scale;
+    
+    // 2x2 박스 필터 (안티앨리어싱)
+    half4 c00 = iTexture.eval(srcCoordCenter + float2(-0.5 * scale, -0.5 * scale));
+    half4 c10 = iTexture.eval(srcCoordCenter + float2( 0.5 * scale, -0.5 * scale));
+    half4 c01 = iTexture.eval(srcCoordCenter + float2(-0.5 * scale,  0.5 * scale));
+    half4 c11 = iTexture.eval(srcCoordCenter + float2( 0.5 * scale,  0.5 * scale));
+    
+    // 4개 샘플의 평균
+    return (c00 + c10 + c01 + c11) * 0.25;
+}</code>
+                        </div>                
+                    </ul>
+                    <ul><br>
+                    UP Scale <br>                    
+                    <img src="materials/chapter6/upscale.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                    <div class="code-example">                     
+<code>uniform shader iTexture;
+uniform float2 iResolution;
+uniform float blurRadius;
+
+half4 main(float2 fragCoord) {
+    float scale = 4.0;
+    
+    // 다운스케일된 텍스처 좌표
+    float2 downscaledCoord = fragCoord / scale;
+    
+    // 바이리니어 보간을 위한 4개 샘플
+    float2 baseCoord = floor(downscaledCoord);
+    float2 frac = fract(downscaledCoord);
+    
+    half4 c00 = iTexture.eval(baseCoord + float2(0.0, 0.0));
+    half4 c10 = iTexture.eval(baseCoord + float2(1.0, 0.0));
+    half4 c01 = iTexture.eval(baseCoord + float2(0.0, 1.0));
+    half4 c11 = iTexture.eval(baseCoord + float2(1.0, 1.0));
+    
+    // 바이리니어 보간
+    half4 c0 = mix(c00, c10, frac.x);
+    half4 c1 = mix(c01, c11, frac.x);
+    return mix(c0, c1, frac.y);
+}</code>
+                        </div>                
+                    </ul>                      
+                </div>
+            </div>
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts2')">
+                    <h4> Gawase Blur </h4><br>            
+                    <span class="toggle-icon" id="icon-concepts2">▼</span>
+                </div>        
+                <div class="concepts-content" id="concepts2">        
+                    <ul><br>                    
+                    가와세 블러는 소수 탭을 여러 패스로 누적하여 큰 반경의 블러를 효율적으로 구현하는 기법입니다.<br>
+                    가우시안 블러보다 퀄리티는 좋지 않지만, 성능은 좋습니다.<br><br>
+                    탭이란 샘플링하는 포인트를 의미하는데, 아래 예제는 9탭을 사용합니다. <br>
+                    가우시안 블러와 언뜻 비슷해보이지만, 가우시안 블러는 radius가 커지게 되면 커널 사이즈가 커지는 반면,<br>
+                    가와세 블러는 radius가 커지더라도 커널 사이즈는 고정이며, step(offset) 값이 변하게 됩니다.<br><br>
+                    blur radius가 커지면 step이 커지게 되고, 멀리 떨어진 픽셀을 샘플링하게 됩니다.<br>
+                    퀄리티 문제로 인하여 다운샘플링과 함께 패스를 여러번 적용 합니다.<br>
+                    아래는 1패스 9탭 가와세 블러 코드 입니다.<br>
+                    <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+uniform float  blurRadius;
+
+half4 main(float2 fragCoord) {
+    float r = clamp(blurRadius, 0.0, 20.0);
+    
+    half4 sum = half4(0.0);
+    
+    // 중심
+    sum += iTexture.eval(fragCoord) * 4.0;
+    
+    // 상하좌우
+    sum += iTexture.eval(fragCoord + float2( 0, -r)) * 2.0;
+    sum += iTexture.eval(fragCoord + float2(-r,  0)) * 2.0;
+    sum += iTexture.eval(fragCoord + float2( r,  0)) * 2.0;
+    sum += iTexture.eval(fragCoord + float2( 0,  r)) * 2.0;
+    
+    // 대각선
+    sum += iTexture.eval(fragCoord + float2(-r, -r));
+    sum += iTexture.eval(fragCoord + float2( r, -r));
+    sum += iTexture.eval(fragCoord + float2(-r,  r));
+    sum += iTexture.eval(fragCoord + float2( r,  r));
+    
+    return sum / 16.0;
+}  
+</code>
+                            </div>
+                        </li>                        
+                    </ul>                  
+                </div>
+            </div>
             <div class="lesson-content">
                 <div class="editor-section">
                     <div class="section-header">SKSL 코드</div>
                     <textarea class="code-editor" id="editor3">
 uniform float2 iResolution;
 uniform shader iTexture;
+uniform float  blurRadius;
+
 half4 main(float2 fragCoord) {
-    float2 uv = fragCoord / iResolution;
-    return iTexture.eval(uv * iResolution);
+    return half4(0., 0., 1., 1.);
 }
 </textarea>
                     <div class="controls">
                         <button class="btn" onclick="compileShader(3)">실행</button>
+                    </div>
+                    <div style="padding: 10px; background-color: #494949; border-radius: 1px;">
+                        <label for="radiusSlider3" style="display: inline-block; width: 100px;">Blur Radius:</label>
+                        <input type="range" id="radiusSlider3" min="0" max="20" value="5" step="0.5" 
+                            style="width: 150px; vertical-align: middle;"
+                            oninput="updateRadius(3, this.value)">
+                        <span id="radiusValue3" style="display: inline-block; width: 40px; margin-left: 10px;">5.0</span>
                     </div>
                 </div>
 
@@ -580,11 +359,17 @@ half4 main(float2 fragCoord) {
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <script>
+        function updateRadius(lessonNum, value) {
+            document.getElementById(`radiusValue${lessonNum}`).textContent = parseFloat(value).toFixed(1);
+            if (window.setUniformValue) {
+                window.setUniformValue(lessonNum, 'blurRadius', parseFloat(value));
+            }
+        }
+
         function toggleConcepts(conceptsId) {
             const content = document.getElementById(conceptsId);
             const icon = document.getElementById(`icon-${conceptsId}`);
@@ -618,10 +403,7 @@ half4 main(float2 fragCoord) {
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // concepts2, concepts3만 닫고 싶다면:
-            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5', 'concepts6', 'concepts7',
-                'concepts8'
-            ];
+            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5', 'concepts6', 'concepts7', 'concepts8'];
             
             sectionsToClose.forEach(conceptsId => {
                 const content = document.getElementById(conceptsId);
@@ -641,10 +423,8 @@ half4 main(float2 fragCoord) {
             });
         });
 
-        // Placeholder functions for shader compilation
         function compileShader(id) {
             console.log(`Compiling shader ${id}...`);
-            // 실제 셰이더 컴파일 로직이 여기에 들어갑니다
         }
     </script>
 

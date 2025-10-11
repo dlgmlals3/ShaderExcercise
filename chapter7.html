@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKSL 셰이더 교육 자료</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 SKSL 셰이더 교육 자료</h1>
+        <p>Chapter 7. 멀티 패스</p>
+
+        <nav class="chapter-nav">
+            <a href="index.html" class="chapter-btn">0. 기본 함수 설명</a>
+            <a href="chapter1.html" class="chapter-btn">1. 기본 도형과 패턴</a>
+            <a href="chapter2.html" class="chapter-btn">2. 기본 도형 회전 이동 확대</a>
+            <a href="chapter3.html" class="chapter-btn">3. 랜덤 함수와 노이즈 함수</a><br>
+            <a href="chapter4.html" class="chapter-btn">4. Fractal</a>
+            <a href="chapter5.html" class="chapter-btn">5. 이미지 필터링 및 컬러 커브</a>
+            <a href="chapter6.html" class="chapter-btn">6. 블러 알고리즘</a>
+            <a href="chapter7.html" class="chapter-btn active">7. 멀티패스 테스트</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title">멀티 패스 테스트</div>
+                <div class="lesson-description">
+                    <h3>학습 목표</h3>
+                    4-Pass 시스템을 활용한 고급 이미지 처리<br>
+                    Pass 1: 원본 이미지 → Pass 2: 수평 블러 → Pass 3: 수직 블러 → Pass 4: 최종 후처리<br>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4>4-Pass 셰이더 시스템</h4><br>            
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>        
+                <div class="concepts-content" id="concepts5">        
+                    <ul><br>
+                    최대 4개의 패스를 순차적으로 실행하는 범용 시스템입니다.<br>
+                    각 Pass의 결과가 다음 Pass의 입력(iTexture)으로 자동 전달됩니다.<br>
+                    가우시안 블러, 컨볼루션, 이미지 효과 등 다양한 용도로 사용 가능합니다.<br>
+                    compile2Pass(), compile3Pass(), compile4Pass() 함수로 원하는 개수만큼 실행 가능합니다.<br><br>
+                    </ul>                  
+                </div>
+            </div>
+
+            <!-- Pass 1 -->
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">Pass 1 셰이더 (원본 이미지)</div>
+                    <textarea class="code-editor" id="editor_pass_1" rows="15">uniform shader iTexture;
+uniform float2 iResolution;
+
+half4 main(float2 fragCoord) {
+    // return iTexture.eval(fragCoord);
+
+    float  scale = 4.;           // 다운스케일 배율 (2.0 = 1/2, 4.0 = 1/4)
+    float2 srcCoordCenter = (fragCoord + 0.5) * scale;
+    
+    // 2x2 박스 필터 (안티앨리어싱)
+    half4 c00 = iTexture.eval(srcCoordCenter + float2(-0.5 * scale, -0.5 * scale));
+    half4 c10 = iTexture.eval(srcCoordCenter + float2( 0.5 * scale, -0.5 * scale));
+    half4 c01 = iTexture.eval(srcCoordCenter + float2(-0.5 * scale,  0.5 * scale));
+    half4 c11 = iTexture.eval(srcCoordCenter + float2( 0.5 * scale,  0.5 * scale));
+    
+    // 4개 샘플의 평균
+    return (c00 + c10 + c01 + c11) * 0.25;
+}</textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">Pass 1 결과</div>
+                    <div id="error2"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading2">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas2" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pass 2 -->
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">Pass 2 셰이더 (Horizontal Blur)</div>
+                    <textarea class="code-editor" id="editor_pass_2" rows="20">uniform shader iTexture;
+uniform float2 iResolution;
+uniform float blurRadius;
+
+float gaussian(float x, float sigma) {
+    return exp(-(x*x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);
+}
+
+half4 main(float2 fragCoord) {
+    const int MAX_RADIUS = 200;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+    float sigma = max(r, 1.0) * 0.33;
+    
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
+    
+    for (int x = -MAX_RADIUS; x <= MAX_RADIUS; ++x) {
+        float2 off = float2(float(x), 0.0);
+        float dist = abs(float(x));
+        if (dist > r) continue;
+
+        float w = gaussian(dist, sigma);
+        color += iTexture.eval(fragCoord + off) * w;
+        totalWeight += w;
+    }
+    return color / max(totalWeight, 1e-6);
+}</textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">Pass 2 결과 (수평 블러)</div>
+                    <div id="error3"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading3">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas3" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pass 3 -->
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">Pass 3 셰이더 (Vertical Blur)</div>
+                    <textarea class="code-editor" id="editor_pass_3" rows="20">uniform shader iTexture;
+uniform float2 iResolution;
+uniform float blurRadius;
+
+float gaussian(float x, float sigma) {
+    return exp(-(x*x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);
+}
+
+half4 main(float2 fragCoord) {
+    const int MAX_RADIUS = 200;
+    float r = clamp(blurRadius, 0.0, float(MAX_RADIUS));
+    float sigma = max(r, 1.0) * 0.33;
+    
+    half4 color = half4(0.0);
+    float totalWeight = 0.0;
+    
+    for (int y = -MAX_RADIUS; y <= MAX_RADIUS; ++y) {
+        float2 off = float2(0.0, float(y));
+        float dist = abs(float(y));
+        if (dist > r) continue;
+
+        float w = gaussian(dist, sigma);
+        color += iTexture.eval(fragCoord + off) * w;
+        totalWeight += w;
+    }
+    return color / max(totalWeight, 1e-6);
+}</textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">Pass 3 결과 (최종 블러)</div>
+                    <div id="error4"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading4">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas4" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pass 4 -->
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">Pass 4 셰이더 (후처리)</div>
+                    <textarea class="code-editor" id="editor_pass_4" rows="15">uniform shader iTexture;
+uniform float2 iResolution;
+uniform float blurRadius;
+
+half4 main(float2 fragCoord) {
+    // return iTexture.eval(fragCoord);
+    float scale = 4.0;
+    
+    // 다운스케일된 텍스처 좌표
+    float2 downscaledCoord = fragCoord / scale;
+    
+    // 바이리니어 보간을 위한 4개 샘플
+    float2 baseCoord = floor(downscaledCoord);
+    float2 frac = fract(downscaledCoord);
+    
+    half4 c00 = iTexture.eval(baseCoord + float2(0.0, 0.0));
+    half4 c10 = iTexture.eval(baseCoord + float2(1.0, 0.0));
+    half4 c01 = iTexture.eval(baseCoord + float2(0.0, 1.0));
+    half4 c11 = iTexture.eval(baseCoord + float2(1.0, 1.0));
+    
+    // 바이리니어 보간
+    half4 c0 = mix(c00, c10, frac.x);
+    half4 c1 = mix(c01, c11, frac.x);
+    return mix(c0, c1, frac.y);
+}</textarea>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">Pass 4 결과 (최종 출력)</div>
+                    <div id="error5"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading5">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas5" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 컨트롤 -->
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="controls">
+                        <button class="btn" onclick="compile4Pass()">Multi-Pass 실행</button>
+                    </div>
+                    <div style="padding: 10px; background-color: #494949; border-radius: 4px; margin-top: 10px;">
+                        <label for="radiusSlider_multipass" style="display: inline-block; width: 100px; color: #fff;">Blur Radius:</label>
+                        <input type="range" id="radiusSlider_multipass" min="0" max="200" value="5" step="0.5" 
+                            style="width: 200px; vertical-align: middle;"
+                            oninput="updateMultiPassRadius(this.value)">
+                        <span id="radiusValue_multipass" style="display: inline-block; width: 50px; margin-left: 10px; color: #fff; font-weight: bold;">5.0</span>
+                    </div>
+                    <div style="padding: 10px; margin-top: 10px; background-color: #2a2a2a; border-radius: 4px; color: #aaa; font-size: 0.9em;">
+                        팁: Ctrl+Enter로 셰이더 재컴파일, Ctrl+R로 텍스처 새로고침
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function toggleConcepts(conceptsId) {
+            const content = document.getElementById(conceptsId);
+            const icon = document.getElementById(`icon-${conceptsId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sectionsToClose = ['concepts5'];
+            
+            sectionsToClose.forEach(conceptsId => {
+                const content = document.getElementById(conceptsId);
+                const icon = document.getElementById(`icon-${conceptsId}`);
+                const header = document.querySelector(`[onclick="toggleConcepts('${conceptsId}')"]`);
+                
+                if (content) {
+                    content.classList.add('collapsed');
+                    content.style.maxHeight = '0';
+                }
+                if (icon) {
+                    icon.textContent = '▼';
+                }
+                if (header) {
+                    header.classList.add('closed');
+                }
+            });
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/canvaskit.min.js"></script>
+    <script src="shader-tutorial.js"></script>
+</body>
+</html>

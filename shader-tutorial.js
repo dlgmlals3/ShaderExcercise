@@ -7,9 +7,17 @@ const height = 300;
 // 텍스처 저장소
 let textureImage = null;
 let canvasKitImage = null;
+let resizedCanvasKitImage = null;
+
+// 2-Pass 범용 시스템
+const twoPassSystem = {
+    shaders: {},
+    customUniforms: { blurRadius: 5.0 },
+    uniformInfo: {}
+};
 
 // 기본 텍스처 경로 설정
-const DEFAULT_TEXTURE_PATH = './texture.jpg'; // 로컬 경로
+const DEFAULT_TEXTURE_PATH = './texture.jpg';
 
 // === iTime용 시작 시간 ===
 let _t0 = performance.now();
@@ -26,26 +34,24 @@ function _tick() {
         }
     }
     if (any) _animReq = requestAnimationFrame(_tick);
-    else _animReq = 0; // 더 이상 iTime 쓰는 레슨 없으면 정지
+    else _animReq = 0;
 }
 
 function ensureAnimation() {
-  if (!_animReq) _tick(); // 아직 돌고 있지 않으면 시작
+  if (!_animReq) _tick();
 }
 
-// 이미지 로딩 함수 (로컬 경로 사용)
+// 이미지 로딩 함수
 async function loadTexture(imagePath = DEFAULT_TEXTURE_PATH) {
     try {
         console.log(`텍스처 이미지 로딩 중: ${imagePath}`);
         
-        // HTML Image 로드
         const img = new Image();
         
         await new Promise((resolve) => {
             img.onload = resolve;
             img.onerror = () => {
                 console.warn(`텍스처 로딩 실패: ${imagePath}, 기본 이미지 사용`);
-                // 기본 이미지로 폴백
                 img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjU2IiBoZWlnaHQ9IjI1NiIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImdyYWQiIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMTAwJSIgeTI9IjEwMCUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNmZjAwMDAiLz48c3RvcCBvZmZzZXQ9IjMzJSIgc3RvcC1jb2xvcj0iIzAwZmYwMCIvPjxzdG9wIG9mZnNldD0iNjYlIiBzdG9wLWNvbG9yPSIjMDAwMGZmIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjZmZmZjAwIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjI1NiIgaGVpZ2h0PSIyNTYiIGZpbGw9InVybCgjZ3JhZCkiLz48L3N2Zz4=';
                 resolve();
             };
@@ -54,7 +60,6 @@ async function loadTexture(imagePath = DEFAULT_TEXTURE_PATH) {
         
         textureImage = img;
         
-        // CanvasKit이 준비되면 CanvasKit Image로 변환
         if (CanvasKit) {
             await createCanvasKitImage();
         }
@@ -67,44 +72,40 @@ async function loadTexture(imagePath = DEFAULT_TEXTURE_PATH) {
     }
 }
 
-// 텍스처 새로고침 함수 (개발 중 텍스처 파일이 바뀔 때 사용)
 async function refreshTexture() {
-    // 캐시 방지를 위해 timestamp 추가
     const cacheBuster = `?t=${Date.now()}`;
     const success = await loadTexture(DEFAULT_TEXTURE_PATH + cacheBuster);
     
     if (success && CanvasKit) {
         await createCanvasKitImage();
-        // 텍스처를 사용하는 모든 레슨 다시 렌더링
         for (let i = 1; i <= maxLessons; i++) {
             if (lessons[i] && lessons[i].usesTexture) {
                 renderShader(i);
             }
+        }
+        // 2-Pass도 업데이트
+        if (Object.keys(twoPassSystem.shaders).length === 2) {
+            render2Pass();
         }
         console.log('텍스처 새로고침 완료');
     }
     return success;
 }
 
-// CanvasKit Image 생성
 async function createCanvasKitImage() {
     if (!CanvasKit || !textureImage) return;
     
     try {
-        // HTML Image를 Canvas로 변환 (원본 크기 유지)
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         
-        // 원본 이미지 크기 사용
         canvas.width = textureImage.naturalWidth || textureImage.width;
         canvas.height = textureImage.naturalHeight || textureImage.height;
         
         ctx.drawImage(textureImage, 0, 0);
         
-        // ImageData 가져오기
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         
-        // CanvasKit Image 생성
         canvasKitImage = CanvasKit.MakeImage({
             width: canvas.width,
             height: canvas.height,
@@ -113,31 +114,49 @@ async function createCanvasKitImage() {
             colorSpace: CanvasKit.ColorSpace.SRGB
         }, imageData.data, canvas.width * 4);
         
+        // ✨ 300x300으로 리사이즈된 버전 생성
+        const resizedCanvas = document.createElement('canvas');
+        const resizedCtx = resizedCanvas.getContext('2d');
+        resizedCanvas.width = width;
+        resizedCanvas.height = height;
+        resizedCtx.drawImage(textureImage, 0, 0, width, height);
+        
+        const resizedImageData = resizedCtx.getImageData(0, 0, width, height);
+        
+        if (resizedCanvasKitImage) {
+            resizedCanvasKitImage.delete();
+        }
+        
+        resizedCanvasKitImage = CanvasKit.MakeImage({
+            width: width,
+            height: height,
+            alphaType: CanvasKit.AlphaType.Unpremul,
+            colorType: CanvasKit.ColorType.RGBA_8888,
+            colorSpace: CanvasKit.ColorSpace.SRGB
+        }, resizedImageData.data, width * 4);
+        
         console.log(`CanvasKit 이미지 생성 완료: ${canvas.width}×${canvas.height}`);
+        console.log(`리사이즈 이미지 생성 완료: ${width}×${height}`);
     } catch (error) {
         console.error('CanvasKit 이미지 생성 실패:', error);
     }
 }
 
-// CanvasKit 초기화
 async function initCanvasKit() {
     try {
         CanvasKit = await CanvasKitInit({
             locateFile: (file) => `https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/${file}`
         });
 
-        // 텍스처 이미지가 이미 로드되었다면 CanvasKit Image 생성
         if (textureImage) {
             await createCanvasKitImage();
         }
 
-        // 각 레슨 초기화
         for (let i = 1; i <= maxLessons; i++) {
             try {
                 const canvas = document.getElementById(`canvas${i}`);
                 const loading = document.getElementById(`loading${i}`);
                 
-                // 요소가 존재하지 않으면 스킵
                 if (!canvas || !loading) {
                     console.warn(`레슨 ${i}: 필요한 DOM 요소가 없습니다`);
                     continue;
@@ -148,21 +167,20 @@ async function initCanvasKit() {
                     lessons[i] = {
                         surface: surface,
                         canvas: surface.getCanvas(),
-                        usesTime: false,   // iTime 사용 여부
-                        usesTexture: false // iTexture 사용 여부
+                        usesTime: false,
+                        usesTexture: false,
+                        customUniforms: {}
                     };
                     
                     loading.style.display = 'none';
                     canvas.style.display = 'block';
                     
-                    // 초기 컴파일
                     compileShader(i);
                 } else {
                     console.error(`레슨 ${i}: 캔버스 surface 생성 실패`);
                 }
             } catch (error) {
                 console.error(`레슨 ${i} 초기화 실패:`, error);
-                // 실패해도 다음 레슨 초기화 계속 진행
             }
         }
     } catch (error) {
@@ -189,11 +207,9 @@ function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
     }
         
     half4 main(float2 fragCoord) {
-        float2 uv = fragCoord / iResolution;   // 0 ~ 1 좌표
+        float2 uv = fragCoord / iResolution;
         uv.y *= iResolution.y / iResolution.x;
 
-        // skia y축이 아래로 향하므로 y축 반전        
-        // 좌표계 범위: x: -1 ~ 1, y: -1 ~ 1     
         float2 p = float2(uv.x * 2.0 - 1.0, (1.0 - uv.y) * 2.0 - 1.0);                
         
         ${funcBody}
@@ -202,24 +218,349 @@ function makeGraphShader(funcBody = "float y = sin(3.14159 * p.x);") {
         float d = abs(p.y - y);
         float line = 1.0 - smoothstep(0.0, lineThickness, d);
 
-        // 좌표축
         float ax = 1.0 - smoothstep(0.0, 0.05, abs(p.x));
         float ay = 1.0 - smoothstep(0.0, 0.05, abs(p.y));
 
-        // 배경색
         float3 col = float3(0.01, 0.1, 0.11);
 
-        // 축 색 적용
         col = mix(col, float3(0.3,0.3,0.3), ax + ay);
 
-        // 그래프 색 적용
         col = mix(col, float3(1.0,0.2,0.2), line);
 
         return half4(col, 1.0);
     }`;
 }
 
-// !!! makeTextureShader 제거됨 !!!
+// ✨ uniform 자동 감지 및 파싱
+function parseUniforms(skslCode) {
+    const uniforms = { names: [], hasTime: false, hasResolution: false };
+    
+    // iTime 체크
+    if (/\biTime\b/.test(skslCode)) {
+        uniforms.hasTime = true;
+    }
+    
+    // iResolution 체크
+    if (/\biResolution\b/.test(skslCode)) {
+        uniforms.hasResolution = true;
+    }
+    
+    // 커스텀 uniform 추출
+    const uniformPattern = /uniform\s+float\s+(\w+);/g;
+    let match;
+    while ((match = uniformPattern.exec(skslCode)) !== null) {
+        const uniformName = match[1];
+        if (uniformName !== 'iTime' && !uniformName.startsWith('iResolution')) {
+            uniforms.names.push(uniformName);
+        }
+    }
+    
+    return uniforms;
+}
+
+function compileSinglePass(passNum) {
+    const editor = document.getElementById(`editor_pass_${passNum}`);
+    if (!editor) {
+        showError(passNum + 1, `Pass ${passNum} 에디터를 찾을 수 없습니다`);
+        return null;
+    }
+    
+    const skslCode = editor.value;
+    if (!skslCode || skslCode.trim() === '') {
+        showError(passNum + 1, `Pass ${passNum} 셰이더 코드가 비어있습니다`);
+        return null;
+    }
+    
+    console.log(`Pass ${passNum} SKSL 코드:`, skslCode);
+    
+    let errText = null;
+    const effect = CanvasKit.RuntimeEffect.Make(skslCode, (err) => {
+        errText = err;
+    });
+    
+    if (!effect) {
+        showError(passNum + 1, `Pass ${passNum} 컴파일 실패:<br/>${(errText || 'Unknown error').replace(/\n/g, '<br/>')}`);
+        return null;
+    }
+    
+    return {
+        effect: effect,
+        uniformInfo: parseUniforms(skslCode)
+    };
+}
+
+function compile4Pass() {
+    if (!CanvasKit) return;
+    
+    console.log("4-Pass 컴파일 시작");
+    clearError(2);
+    
+    const compiledShaders = {};
+    const uniformInfo = {};
+    
+    // Pass 1, 2, 3 컴파일
+    for (let i = 1; i <= 4; i++) {
+        const result = compileSinglePass(i);
+        if (!result) return; // 컴파일 실패시 중단
+        
+        compiledShaders[`pass_${i}`] = result.effect;
+        uniformInfo[`pass_${i}`] = result.uniformInfo;
+    }
+        
+    Object.values(twoPassSystem.shaders).forEach(shader => {
+        try { shader.delete(); } catch {}
+    });
+    
+    twoPassSystem.shaders = compiledShaders;
+    twoPassSystem.uniformInfo = uniformInfo;
+    
+    render4Pass();
+}
+
+function buildUniformsArray(uniformInfo, customUniforms) {
+    const uniformsArray = [];
+    
+    if (uniformInfo.hasResolution) {
+        uniformsArray.push(width, height);
+    }
+    
+    if (uniformInfo.hasTime) {
+        const t = (performance.now() - _t0) / 1000.0;
+        uniformsArray.push(t);
+    }
+    
+    for (const uniformName of uniformInfo.names) {
+        const value = customUniforms[uniformName] || 0.0;
+        uniformsArray.push(value);
+    }
+    
+    return new Float32Array(uniformsArray);
+}
+
+function renderSinglePass(passNum, canvasIndex, shader, inputShader) {
+    const rt = lessons[canvasIndex];
+    const uniformInfo = twoPassSystem.uniformInfo[`pass_${passNum}`];
+    
+    const uniforms = buildUniformsArray(uniformInfo, twoPassSystem.customUniforms);
+    
+    const passShader = shader.makeShaderWithChildren(uniforms, [inputShader]);
+    const paint = new CanvasKit.Paint();
+    paint.setShader(passShader);
+    
+    rt.canvas.clear(CanvasKit.WHITE);
+    rt.canvas.drawRect(CanvasKit.LTRBRect(0, 0, width, height), paint);
+    rt.surface.flush();
+    
+    return { passShader, paint };
+}
+
+function render4Pass() {
+    console.time('render4Pass_total');
+    
+    if (!resizedCanvasKitImage) {
+        showError(2, '셰이더가 컴파일되지 않았습니다');
+        return;
+    }
+    
+    if (!lessons[2] || !lessons[2].canvas || !lessons[3] || !lessons[3].canvas || !lessons[4] || !lessons[4].canvas) {
+        console.error('Canvas 2, 3, 4가 초기화되지 않았습니다');
+        return;
+    }
+    
+    try {
+        const toCleanup = [];
+        
+        // Pass 1: 원본 이미지 사용
+        const imageShader = resizedCanvasKitImage.makeShaderOptions(
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.FilterMode.Linear,
+            CanvasKit.MipmapMode.None
+        );
+        toCleanup.push(imageShader);
+        
+        const pass1 = renderSinglePass(1, 2, twoPassSystem.shaders.pass_1, imageShader);
+        toCleanup.push(pass1.paint);
+        
+        const snapshot1 = lessons[2].surface.makeImageSnapshot();
+        const pass1Shader = snapshot1.makeShaderOptions(
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.FilterMode.Linear,
+            CanvasKit.MipmapMode.None
+        );
+        toCleanup.push(snapshot1, pass1Shader);
+        
+        // Pass 2: Pass 1의 shader 사용
+        const pass2 = renderSinglePass(2, 3, twoPassSystem.shaders.pass_2, pass1.passShader);
+        toCleanup.push(pass1.passShader, pass2.paint);
+        
+        const snapshot2 = lessons[3].surface.makeImageSnapshot();
+        const pass2Shader = snapshot2.makeShaderOptions(
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.FilterMode.Linear,
+            CanvasKit.MipmapMode.None
+        );
+        toCleanup.push(snapshot2, pass2Shader);
+        
+        // Pass 3: Pass 2의 shader 사용
+        const pass3 = renderSinglePass(3, 4, twoPassSystem.shaders.pass_3, pass2.passShader);
+        toCleanup.push(pass2.passShader, pass3.passShader, pass3.paint);
+        const snapshot3 = lessons[4].surface.makeImageSnapshot();
+        const pass3Shader = snapshot3.makeShaderOptions(
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.TileMode.Clamp,
+            CanvasKit.FilterMode.Linear,
+            CanvasKit.MipmapMode.None
+        );
+
+        // Pass 4: Pass 3의 shader 사용
+        const pass4 = renderSinglePass(4, 5, twoPassSystem.shaders.pass_4, pass3.passShader);
+        toCleanup.push(pass3.passShader, pass3.paint);
+
+
+        //모든 리소스 정리
+        toCleanup.forEach(resource => {
+            try { resource.delete(); } catch (e) {}
+        });
+        
+        console.timeEnd('render4Pass_total');
+        
+    } catch (error) {
+        showError(2, '3-Pass 렌더링 오류: ' + error.message);
+        console.error(error);
+    }
+}
+
+
+// function render2Pass() {
+//     console.time('render2Pass_total');
+    
+//     if (!resizedCanvasKitImage || Object.keys(twoPassSystem.shaders).length !== 2) {
+//         showError(2, '셰이더가 컴파일되지 않았습니다');
+//         return;
+//     }
+    
+//     if (!lessons[2] || !lessons[2].canvas || !lessons[3] || !lessons[3].canvas) {
+//         console.error('Canvas 2 또는 Canvas 3이 초기화되지 않았습니다');
+//         return;
+//     }
+    
+//     try {
+//         // === Pass 1: canvas2에 렌더링 ===
+//         const rt1 = lessons[2];
+//         const uniforms1Array = [];
+//         const uniformInfo1 = twoPassSystem.uniformInfo.pass_1;
+        
+//         if (uniformInfo1.hasResolution) {
+//             uniforms1Array.push(width, height);
+//         }
+        
+//         if (uniformInfo1.hasTime) {
+//             const t = (performance.now() - _t0) / 1000.0;
+//             uniforms1Array.push(t);
+//         }
+        
+//         for (const uniformName of uniformInfo1.names) {
+//             const value = twoPassSystem.customUniforms[uniformName] || 0.0;
+//             uniforms1Array.push(value);
+//         }
+        
+//         const uniforms1 = new Float32Array(uniforms1Array);
+        
+//         const imageShader = resizedCanvasKitImage.makeShaderOptions(
+//             CanvasKit.TileMode.Clamp,
+//             CanvasKit.TileMode.Clamp,
+//             CanvasKit.FilterMode.Linear,
+//             CanvasKit.MipmapMode.None
+//         );
+        
+//         const shader1 = twoPassSystem.shaders.pass_1.makeShaderWithChildren(uniforms1, [imageShader]);
+//         const paint1 = new CanvasKit.Paint();
+//         paint1.setShader(shader1);
+        
+//         console.time('Pass1_draw');
+        
+//         rt1.canvas.clear(CanvasKit.WHITE);
+//         rt1.canvas.drawRect(CanvasKit.LTRBRect(0, 0, width, height), paint1);
+//         rt1.surface.flush();
+
+//         console.timeEnd('Pass1_draw');
+        
+//         console.time('Pass1_snapshot');
+//         const snapshot1 = rt1.surface.makeImageSnapshot();
+//         const pass1Shader = snapshot1.makeShaderOptions(
+//             CanvasKit.TileMode.Clamp,
+//             CanvasKit.TileMode.Clamp,
+//             CanvasKit.FilterMode.Linear,
+//             CanvasKit.MipmapMode.None
+//         );
+//         console.timeEnd('Pass1_snapshot');
+                
+
+//         // === Pass 2: canvas3에 렌더링 ===
+//         const rt2 = lessons[3];
+//         const uniforms2Array = [];
+//         const uniformInfo2 = twoPassSystem.uniformInfo.pass_2;
+//         if (uniformInfo2.hasResolution) {
+//             uniforms2Array.push(width, height);
+//         }
+//         if (uniformInfo2.hasTime) {
+//             const t = (performance.now() - _t0) / 1000.0;
+//             uniforms2Array.push(t);
+//         }
+//         for (const uniformName of uniformInfo2.names) {
+//             const value = twoPassSystem.customUniforms[uniformName] || 0.0;
+//             uniforms2Array.push(value);
+//         }        
+//         const uniforms2 = new Float32Array(uniforms2Array);
+//         const shader2 = twoPassSystem.shaders.pass_2.makeShaderWithChildren(uniforms2, [shader1]);
+//         const paint2 = new CanvasKit.Paint();
+//         paint2.setShader(shader2);
+        
+//         console.time('Pass2_draw');
+//         rt2.canvas.clear(CanvasKit.WHITE);
+//         rt2.canvas.drawRect(CanvasKit.LTRBRect(0, 0, width, height), paint2);
+//         rt2.surface.flush();
+//         console.timeEnd('Pass2_draw');
+        
+
+
+        
+//         shader1.delete();
+//         shader2.delete();
+//         shader3.delete();
+//         imageShader.delete();
+//         paint1.delete();        
+        
+//         paint2.delete();
+//         pass1Shader.delete();
+//         snapshot1.delete();
+        
+//         console.timeEnd('render2Pass_total');
+//         console.log('✓ Pass 1 결과: canvas2, Pass 2 결과: canvas3');
+        
+//     } catch (error) {
+//         showError(2, '2-Pass 렌더링 오류: ' + error.message);
+//         console.error(error);
+//     }
+// }
+
+// ✨ 2-Pass uniform 업데이트
+function updateMultiPassRadius(value) {
+    const radiusDisplay = document.getElementById('radiusValue_multipass');
+    if (radiusDisplay) {
+        radiusDisplay.textContent = parseFloat(value).toFixed(1);
+    }
+    twoPassSystem.customUniforms.blurRadius = parseFloat(value);
+        
+    render4Pass();
+}
+
+// 전역 함수로 노출
+window.compile4Pass = compile4Pass;
+window.updateMultiPassRadius = updateMultiPassRadius;
 
 function compileShader(lessonNum) {
     if (!CanvasKit || !lessons[lessonNum]) return;
@@ -230,17 +571,24 @@ function compileShader(lessonNum) {
     const editor = document.getElementById(`editor${lessonNum}`);
     let skslCode = editor?.value ?? '';
 
-    // 그래프 코드 스터디를 위한 코드.
     changeTexture("./materials/images/image3.jpg");
     if (lessonNum == 1) {
         skslCode = makeGraphShader(editor?.value);
     }
     
-    // 텍스처/시간 사용 여부 감지 (래퍼 사용 안 함)
     const usesTexture = /\biTexture\b/.test(skslCode);
     const usesTime    = /\biTime\b/.test(skslCode);
+    
+    const customUniformPattern = /uniform\s+float\s+(\w+);/g;
+    const customUniforms = {};
+    let match;
+    while ((match = customUniformPattern.exec(skslCode)) !== null) {
+        const uniformName = match[1];
+        if (uniformName !== 'iTime' && !uniformName.startsWith('iResolution')) {
+            customUniforms[uniformName] = lessons[lessonNum].customUniforms[uniformName] || 0.0;
+        }
+    }
 
-    // 기존 셰이더 정리
     if (lessons[lessonNum].shader) {
         try { lessons[lessonNum].shader.delete(); } catch {}
         lessons[lessonNum].shader = null;
@@ -248,13 +596,11 @@ function compileShader(lessonNum) {
 
     let errText = null;
 
-    // 상세 컴파일 오류를 여기서 받음
     const effect = CanvasKit.RuntimeEffect.Make(skslCode, (err) => {
-        errText = err; // 전체 에러 문자열(줄/칼럼 포함)
+        errText = err;
     });
 
     if (!effect) {
-        // UI에 출력
         showError(lessonNum, (errText || 'SKSL 컴파일 실패').replace(/\n/g, '<br/>'));
         return;
     }
@@ -262,7 +608,9 @@ function compileShader(lessonNum) {
     lessons[lessonNum].shader = effect;
     lessons[lessonNum].usesTexture = usesTexture;
     lessons[lessonNum].usesTime    = usesTime;
-    if (usesTime) ensureAnimation(); // iTime 쓰면 루프 보장
+    lessons[lessonNum].customUniforms = customUniforms;
+    
+    if (usesTime) ensureAnimation();
 
     renderShader(lessonNum);
 }
@@ -272,26 +620,25 @@ function renderShader(lessonNum) {
     if (!lesson.shader || !lesson.canvas) return;
 
     try {
-        // iResolution만 기본 전달
-        let uniforms = new Float32Array([width, height]);
+        let uniformsArray = [width, height];
 
-        // iTime 쓰면 마지막에 추가
         if (lesson.usesTime) {
             const t = (performance.now() - _t0) / 1000.0;
-            const u = new Float32Array(uniforms.length + 1);
-            u.set(uniforms, 0);
-            u[uniforms.length] = t; // iTime
-            uniforms = u;
+            uniformsArray.push(t);
         }
+        
+        for (const [name, value] of Object.entries(lesson.customUniforms)) {
+            uniformsArray.push(value);
+        }
+        
+        const uniforms = new Float32Array(uniformsArray);
         
         let shaderInstance;
         
         if (lesson.usesTexture && canvasKitImage) {
-            // 텍스처를 사용하는 셰이더: 캔버스→이미지 stretch 매핑
             const sx = width  / canvasKitImage.width();
             const sy = height / canvasKitImage.height();
 
-            // SkMatrix (column-major 3x3)
             const localMatrix = new Float32Array([
                 sx, 0,  0,
                 0,  sy, 0,
@@ -308,12 +655,11 @@ function renderShader(lessonNum) {
                 
             shaderInstance = lesson.shader.makeShaderWithChildren(
                 uniforms,
-                [imageShader] // children shaders (텍스처)
+                [imageShader]
             );
             
             imageShader.delete();
         } else {
-            // 일반 셰이더
             shaderInstance = lesson.shader.makeShader(uniforms);
         }
 
@@ -332,24 +678,29 @@ function renderShader(lessonNum) {
     }
 }
 
-// 키보드 이벤트 설정
+function setUniformValue(lessonNum, uniformName, value) {
+    if (!lessons[lessonNum]) return;
+    
+    lessons[lessonNum].customUniforms[uniformName] = value;
+    renderShader(lessonNum);
+}
+
+window.setUniformValue = setUniformValue;
+
 function setupKeyboardEvents(lessonNum) {
     const editor = document.getElementById(`editor${lessonNum}`);
     if (editor) {
         editor.addEventListener('keydown', (e) => {
-            // Ctrl+Enter로 컴파일
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 compileShader(lessonNum);
             }
             
-            // Ctrl+R로 텍스처 새로고침
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
                 e.preventDefault();
                 refreshTexture();
             }
             
-            // Tab 키로 들여쓰기
             if (e.key === 'Tab') {
                 e.preventDefault();
                 const start = editor.selectionStart;
@@ -362,23 +713,71 @@ function setupKeyboardEvents(lessonNum) {
     }
 }
 
-// 텍스처 이미지 변경 함수 (다른 경로 지정 시 사용)
+// ✨ 2-Pass 에디터들에도 키보드 이벤트 설정
+function setup2PassKeyboardEvents() {
+    const passNames = ['pass_1', 'pass_2'];
+    
+    passNames.forEach(passName => {
+        const editor = document.getElementById(`editor_${passName}`);
+        if (editor) {
+            editor.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    compile2Pass();
+                }
+                
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
+                    e.preventDefault();
+                    refreshTexture();
+                }
+                
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    
+                    editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
+                    editor.selectionStart = editor.selectionEnd = start + 4;
+                }
+            });
+        }
+    });
+}
+
 async function changeTexture(imagePath) {
     const success = await loadTexture(imagePath);
     if (success && CanvasKit) {
         await createCanvasKitImage();
-        // 텍스처를 사용하는 모든 레슨 다시 렌더링
         for (let i = 1; i <= maxLessons; i++) {
             if (lessons[i] && lessons[i].usesTexture) {
                 renderShader(i);
             }
         }
+        // 2-Pass도 업데이트
+        if (Object.keys(twoPassSystem.shaders).length === 2) {
+            render2Pass();
+        }
     }
 }
 
-// 정리
 window.addEventListener('beforeunload', () => {
-    // 텍스처 정리
+    // 2-Pass 셰이더 정리
+    Object.values(twoPassSystem.shaders).forEach(shader => {
+        try {
+            shader.delete();
+        } catch (e) {
+            console.warn('2-Pass 셰이더 정리 중 오류:', e);
+        }
+    });
+    
+    if (resizedCanvasKitImage) {
+        try {
+            resizedCanvasKitImage.delete();
+        } catch (e) {
+            console.warn('리사이즈 이미지 정리 중 오류:', e);
+        }
+    }
+    
     if (canvasKitImage) {
         try {
             canvasKitImage.delete();
@@ -387,7 +786,6 @@ window.addEventListener('beforeunload', () => {
         }
     }
     
-    // 레슨들 정리
     Object.values(lessons).forEach(lesson => {
         if (lesson && lesson.shader) {
             try {
@@ -406,16 +804,20 @@ window.addEventListener('beforeunload', () => {
     });
 });
 
-// 초기화 시작
+// 초기화
 Promise.all([
-    loadTexture(), // 로컬 텍스처 로드 (./texture.jpg)
-    initCanvasKit() // CanvasKit 초기화
+    loadTexture(),
+    initCanvasKit()
 ]).then(() => {
     for (let i = 1; i <= maxLessons; i++) {
         setupKeyboardEvents(i);
     }
     
+    // 2-Pass 에디터 키보드 이벤트 설정
+    setup2PassKeyboardEvents();
+    
     console.log('모든 초기화 완료');
     console.log('텍스처 파일 경로:', DEFAULT_TEXTURE_PATH);
     console.log('텍스처 새로고침: Ctrl+R');
+    console.log('2-Pass 시스템: Ctrl+Enter로 각 패스 편집 후 "2-Pass 실행" 버튼 클릭');
 });
