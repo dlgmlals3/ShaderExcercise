@@ -327,6 +327,201 @@ vec4 main(vec2 fragCoord) {
                 </div>
             </div>
 
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts4')">
+                    <h4> 물결 모양 만들어보기  </h4><br>                                        
+                    <span class="toggle-icon" id="icon-concepts4">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts4">
+                    <br><h3> 물결 모양 만들기 </h3><br>
+                    <ul>                                                   
+                        <li><strong> sin,cos 사용하여 반복패턴 만들기 </strong><br>
+                            <img src="materials/chapter4/distance.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+half4 main(float2 fragCoord) {    
+    vec2 uv = fragCoord/iResolution.xy;
+    
+    vec2 center = vec2(.5, .5);
+    float dist = distance(uv, center);
+
+    float pattern = sin(dist * 6.);    
+    vec3 color = vec3(1., 0., 0.);    
+    color *= pattern;
+    return vec4(color, 1.);
+}
+</code>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul>                                                   
+                        <li><strong> 물결 모양 2 </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float iTime;
+half4 main(float2 fragCoord) {    
+    vec2 uv = fragCoord / iResolution;
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);
+    
+    // 시간에 따라 바깥으로 퍼지는 물결
+    float ripple = sin(dist * 20.0 - iTime * 3.0);
+    
+    return vec4(vec3(ripple), 1.0);
+}
+</code>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul>                                                   
+                        <li><strong> 물결 모양 3 (감쇠 반응 추가) </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float iTime;
+half4 main(float2 fragCoord) {    
+    vec2 uv = fragCoord / iResolution;
+    vec2 center = vec2(0.5, 0.5);
+    float dist = distance(uv, center);       
+    float ripple = sin(dist * 20.0 - iTime * 3.0);
+    float fade = 1.0 / (1.0 + dist * 5.0);  // 감쇠 계수
+    //float fade = 1.0 / (pow((dist + 1.), 8.));  // 감쇠 계수
+
+    // 거리가 멀어질수록 약해지는 물결
+    ripple *= fade;  // 감쇠 적용
+    
+    vec3 waterColor = vec3(0.2, 0.6, 1.0);
+    vec3 color = waterColor * ripple;
+    
+    return vec4(color, 1.0);
+}
+</code>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts5')">
+                    <h4> 메타볼 만들기  </h4><br>                                       
+                    <span class="toggle-icon" id="icon-concepts5">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts5">
+                    <br><h3> 메타볼 만들기  </h3><br>
+                    <ul>                                                   
+                        <li><strong> 메타볼 만들어보기 </strong><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float iTime;
+
+// 해시/랜덤 유틸
+float hash11(float x) {
+    return fract(sin(x * 1.12345) * 43758.5453123);
+}
+
+vec2 hash21(float x) {
+    float a = hash11(x);
+    float b = hash11(x + 37.23);
+    return vec2(a, b);
+}
+
+vec2 randPos(float k, float idx) {
+    vec2 h = hash21(k * 13.0 + idx * 97.0) * 2.0 - 1.0;
+    return h * vec2(0.42, 0.32);
+}
+
+float randRad(float k, float idx) {
+    return mix(0.20, 0.30, hash11(k * 19.0 + idx * 131.0));
+}
+
+// 구간별 랜덤 모핑
+void getRandomMorph(out vec2 P[3], out float R[3], float t) {
+    float period = 2.7;
+    float seg = floor(t / period);
+    float ft = (t / period) - seg;
+    float w = smoothstep(0.0, 1.0, ft);
+
+    for (int i = 0; i < 3; i++) {
+        float idx = float(i);
+        vec2 A = randPos(seg + idx * 0.37, idx);
+        vec2 B = randPos(seg + 1.0 + idx * 0.37, idx);
+        float RA = randRad(seg + idx * 0.51, idx);
+        float RB = randRad(seg + 1.0 + idx * 0.51, idx);
+        
+        vec2 p = mix(A, B, w);
+        float r = mix(RA, RB, w);
+        
+        float s1 = sin(t * 1.7 + idx * 2.1);
+        float s2 = sin(t * 3.9 + idx * 1.3);
+        p += 0.02 * vec2(s1, s2);
+        r *= (1.0 + 0.03 * sin(t * 2.3 + idx));
+        p.y -= 0.05;
+        
+        P[i] = p;
+        R[i] = r;
+    }
+}
+
+// 메타볼 필드 계산 (파라미터: point, centers[], radii[])
+float metaballField(vec2 point, vec2 centers[3], float radii[3]) {
+    float sum = 0.0;
+    float eps = 1e-4;
+
+    for (int i = 0; i < 3; i++) {
+        float d = length(point - centers[i]);
+        sum += (radii[i] * radii[i]) / (d * d + eps);
+    }
+
+    return sum;
+}
+
+// 필드를 마스크로 변환
+float metaballMask(float field, float threshold, float edge) {
+    return smoothstep(threshold - edge, threshold + edge, field);
+}
+
+// 메타볼 그리기 (파라미터: point, centers[], radii[], threshold, edge, fillColor, bgColor)
+vec3 drawMetaballs(vec2 point, vec2 centers[3], float radii[3], 
+                float threshold, float edge, vec3 fillColor, vec3 bgColor) {
+    float field = metaballField(point, centers, radii);
+    float mask = metaballMask(field, threshold, edge);
+    return mix(bgColor, fillColor, mask);
+}
+
+half4 main(float2 fragCoord) {
+    vec2 R = iResolution;
+    vec2 uv = (fragCoord - 0.5 * R) / R.y;
+    float t = iTime;
+
+    // 약간의 전체 스케일/회전
+    float ang = 0.02 * sin(t * 0.6);
+    mat2 rot = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
+    vec2 point = rot * uv * (1.0 + 0.015 * sin(t * 0.8));
+
+    // 랜덤 모핑으로 centers와 radii 생성
+    vec2 centers[3];
+    float radii[3];
+    getRandomMorph(centers, radii, t);
+
+    // 파라미터 설정
+    float threshold = 1.35;
+    float edge = 1.5 / R.y;
+    vec3 fillColor = vec3(0.18, 0.78, 1.00);
+    vec3 bgColor = vec3(0.0);
+
+    // 메타볼 그리기 (파라미터화된 함수 사용)
+    vec3 color = drawMetaballs(point, centers, radii, threshold, edge, fillColor, bgColor);
+
+    return vec4(color, 1.0);
+}
+
+</code>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
             <div class="lesson-content">
                 <div class="editor-section">

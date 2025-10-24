@@ -1,0 +1,388 @@
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebGL Turbulent Circles</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            max-width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #444;
+        }
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        .control-group h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #aaa;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        input[type="color"] {
+            width: 100%;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .value-display {
+            display: inline-block;
+            float: right;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glCanvas"></canvas>
+   
+    <div class="controls">
+        <h2 style="margin-top: 0;">Controls</h2>
+       
+        <div class="control-group">
+            <h3>Circle 1</h3>
+            <label>
+                Radius: <span class="value-display" id="radius1-val">0.2</span>
+                <input type="range" id="radius1" min="0.05" max="0.5" step="0.01" value="0.2">
+            </label>
+            <label>
+                Color:
+                <input type="color" id="color1" value="#ff0066">
+            </label>
+        </div>
+       
+        <div class="control-group">
+            <h3>Circle 2</h3>
+            <label>
+                Radius: <span class="value-display" id="radius2-val">0.25</span>
+                <input type="range" id="radius2" min="0.05" max="0.5" step="0.01" value="0.25">
+            </label>
+            <label>
+                Color:
+                <input type="color" id="color2" value="#00ffff">
+            </label>
+        </div>
+       
+        <div class="control-group">
+            <h3>Circle 3</h3>
+            <label>
+                Radius: <span class="value-display" id="radius3-val">0.18</span>
+                <input type="range" id="radius3" min="0.05" max="0.5" step="0.01" value="0.18">
+            </label>
+            <label>
+                Color:
+                <input type="color" id="color3" value="#ffff00">
+            </label>
+        </div>
+       
+        <div class="control-group">
+            <h3>Effects</h3>
+            <label>
+                Warping: <span class="value-display" id="warping-val">0.5</span>
+                <input type="range" id="warping" min="0" max="2" step="0.05" value="0.5">
+            </label>
+            <label>
+                Speed: <span class="value-display" id="speed-val">1.0</span>
+                <input type="range" id="speed" min="0.1" max="3" step="0.1" value="1.0">
+            </label>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('glCanvas');
+        const gl = canvas.getContext('webgl');
+
+        if (!gl) {
+            alert('WebGL not supported');
+            throw new Error('WebGL not supported');
+        }
+
+        // Vertex Shader
+        const vertexShaderSource = `
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        `;
+
+        // Fragment Shader with turbulence and warping
+        const fragmentShaderSource = `
+            precision highp float;
+           
+            uniform vec2 u_resolution;
+            uniform float u_time;
+            uniform vec3 u_color1;
+            uniform vec3 u_color2;
+            uniform vec3 u_color3;
+            uniform float u_radius1;
+            uniform float u_radius2;
+            uniform float u_radius3;
+            uniform float u_warping;
+           
+            // 3D Noise function
+            float noise(vec3 p) {
+                vec3 i = floor(p);
+                vec3 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+               
+                float n = i.x + i.y * 57.0 + 113.0 * i.z;
+                return mix(
+                    mix(mix(fract(sin(n) * 43758.5453),
+                           fract(sin(n + 1.0) * 43758.5453), f.x),
+                       mix(fract(sin(n + 57.0) * 43758.5453),
+                           fract(sin(n + 58.0) * 43758.5453), f.x), f.y),
+                    mix(mix(fract(sin(n + 113.0) * 43758.5453),
+                           fract(sin(n + 114.0) * 43758.5453), f.x),
+                       mix(fract(sin(n + 170.0) * 43758.5453),
+                           fract(sin(n + 171.0) * 43758.5453), f.x), f.y),
+                    f.z);
+            }
+           
+            // Turbulence function
+            float turbulence(vec3 p) {
+                float t = 0.0;
+                float amp = 1.0;
+                for(int i = 0; i < 5; i++) {
+                    t += amp * abs(noise(p));
+                    p *= 2.0;
+                    amp *= 0.5;
+                }
+                return t;
+            }
+           
+            // Enhanced water droplet warping that keeps circles intact
+            vec2 warp(vec2 p, float amount) {
+                // Multiple layers of smooth noise for rich water effect
+                float flow1 = noise(vec3(p * 1.2, u_time * 0.4));
+                float flow2 = noise(vec3(p * 1.5 + vec2(50.0, 30.0), u_time * 0.35));
+                float flow3 = noise(vec3(p * 2.0 + vec2(100.0, 60.0), u_time * 0.3));
+               
+                // Dynamic wave distortion
+                float angle = atan(p.y, p.x);
+                float radius = length(p);
+               
+                // Multiple wave frequencies for complex water surface
+                float wave1 = sin(angle * 4.0 + u_time * 0.7 + flow1 * 6.28) * 0.1;
+                float wave2 = cos(angle * 6.0 - u_time * 0.5 + flow2 * 6.28) * 0.06;
+               
+                // Radial ripples
+                float ripple1 = sin(radius * 6.0 - u_time * 1.2) * 0.04;
+                float ripple2 = cos(radius * 9.0 + u_time * 0.8) * 0.03;
+               
+                // Combine all effects for strong water droplet distortion
+                vec2 offset = vec2(
+                    (flow1 - 0.5) * 0.15 + wave1 + ripple1,
+                    (flow2 - 0.5) * 0.15 + wave2 + ripple2
+                ) * amount;
+               
+                // Add fine detail layer
+                offset += vec2(
+                    (flow3 - 0.5) * 0.08,
+                    (noise(vec3(p * 3.0 + 150.0, u_time * 0.45)) - 0.5) * 0.08
+                ) * amount;
+               
+                return p + offset;
+            }
+           
+            void main() {
+                vec2 st = gl_FragCoord.xy / u_resolution;
+                st = st * 2.0 - 1.0;
+                st.x *= u_resolution.x / u_resolution.y;
+               
+                // Apply smooth warping
+                vec2 warpedSt = warp(st, u_warping);
+               
+                // Circle 1 (left bottom, fixed)
+                vec2 pos1 = vec2(-0.5, -0.5);
+                float dist1 = length(warpedSt - pos1);
+                float circle1 = smoothstep(u_radius1 + 0.005, u_radius1 - 0.005, dist1);
+               
+                // Circle 2 (center bottom, fixed)
+                vec2 pos2 = vec2(0.0, -0.5);
+                float dist2 = length(warpedSt - pos2);
+                float circle2 = smoothstep(u_radius2 + 0.005, u_radius2 - 0.005, dist2);
+               
+                // Circle 3 (right bottom, fixed)
+                vec2 pos3 = vec2(0.5, -0.5);
+                float dist3 = length(warpedSt - pos3);
+                float circle3 = smoothstep(u_radius3 + 0.005, u_radius3 - 0.005, dist3);
+               
+                // Combine circles with additive blending
+                vec3 color = vec3(0.0);
+                color += u_color1 * circle1;
+                color += u_color2 * circle2;
+                color += u_color3 * circle3;
+               
+                gl_FragColor = vec4(color, 1.0);
+            }
+        `;
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+           
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vertexShader, fragmentShader) {
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+           
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error('Program link error:', gl.getProgramInfoLog(program));
+                gl.deleteProgram(program);
+                return null;
+            }
+            return program;
+        }
+
+        const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+        const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+        const program = createProgram(gl, vertexShader, fragmentShader);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+        const resolutionUniformLocation = gl.getUniformLocation(program, 'u_resolution');
+        const timeUniformLocation = gl.getUniformLocation(program, 'u_time');
+        const color1UniformLocation = gl.getUniformLocation(program, 'u_color1');
+        const color2UniformLocation = gl.getUniformLocation(program, 'u_color2');
+        const color3UniformLocation = gl.getUniformLocation(program, 'u_color3');
+        const radius1UniformLocation = gl.getUniformLocation(program, 'u_radius1');
+        const radius2UniformLocation = gl.getUniformLocation(program, 'u_radius2');
+        const radius3UniformLocation = gl.getUniformLocation(program, 'u_radius3');
+        const warpingUniformLocation = gl.getUniformLocation(program, 'u_warping');
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        const positions = [
+            -1, -1,
+             1, -1,
+            -1,  1,
+            -1,  1,
+             1, -1,
+             1,  1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? [
+                parseInt(result[1], 16) / 255,
+                parseInt(result[2], 16) / 255,
+                parseInt(result[3], 16) / 255
+            ] : [1, 1, 1];
+        }
+
+        const params = {
+            radius1: 0.2,
+            radius2: 0.25,
+            radius3: 0.18,
+            color1: '#ff0066',
+            color2: '#00ffff',
+            color3: '#ffff00',
+            warping: 0.5,
+            speed: 1.0
+        };
+
+        // Setup controls
+        function setupControl(id, param, isColor = false) {
+            const input = document.getElementById(id);
+            const display = document.getElementById(id + '-val');
+           
+            input.addEventListener('input', (e) => {
+                params[param] = isColor ? e.target.value : parseFloat(e.target.value);
+                if (display && !isColor) {
+                    display.textContent = e.target.value;
+                }
+            });
+        }
+
+        setupControl('radius1', 'radius1');
+        setupControl('radius2', 'radius2');
+        setupControl('radius3', 'radius3');
+        setupControl('color1', 'color1', true);
+        setupControl('color2', 'color2', true);
+        setupControl('color3', 'color3', true);
+        setupControl('warping', 'warping');
+        setupControl('speed', 'speed');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let startTime = Date.now();
+
+        function render() {
+            const currentTime = (Date.now() - startTime) * 0.001 * params.speed;
+
+            gl.clearColor(0, 0, 0, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+            gl.useProgram(program);
+
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+            gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+            gl.uniform1f(timeUniformLocation, currentTime);
+            gl.uniform3fv(color1UniformLocation, hexToRgb(params.color1));
+            gl.uniform3fv(color2UniformLocation, hexToRgb(params.color2));
+            gl.uniform3fv(color3UniformLocation, hexToRgb(params.color3));
+            gl.uniform1f(radius1UniformLocation, params.radius1);
+            gl.uniform1f(radius2UniformLocation, params.radius2);
+            gl.uniform1f(radius3UniformLocation, params.radius3);
+            gl.uniform1f(warpingUniformLocation, params.warping);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+            requestAnimationFrame(render);
+        }
+
+        render();
+    </script>
+</body>
+</html>
