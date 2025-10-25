@@ -49,7 +49,6 @@
                     <img src="materials/chapter4/amplitudeFreq.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
                     <video width="640" height="360" controls>
                     <source src="materials/chapter4/amfm.mp4" type="video/mp4">
-                    브라우저가 동영상을 지원하지 않습니다.
                     </video>
                 </div>
             </div>
@@ -334,8 +333,11 @@ vec4 main(vec2 fragCoord) {
                 </div>
                 <div class="concepts-content" id="concepts4">
                     <br><h3> 물결 모양 만들기 </h3><br>
+                    <video width="640" height="360" controls>
+                    <source src="materials/chapter4/ripple.mp4" type="video/mp4">
+                    </video>
                     <ul>                                                   
-                        <li><strong> sin,cos 사용하여 반복패턴 만들기 </strong><br>
+                        <br><li><strong> sin,cos 사용하여 반복패턴 만들기 </strong><br>
                             <img src="materials/chapter4/distance.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
@@ -409,8 +411,16 @@ half4 main(float2 fragCoord) {
                 </div>
                 <div class="concepts-content" id="concepts5">
                     <br><h3> 메타볼 만들기  </h3><br>
+                    <video width="640" height="360" controls>
+                    <source src="materials/chapter4/metaball.mp4" type="video/mp4">
+                    </video>
                     <ul>                                                   
-                        <li><strong> 메타볼 만들어보기 </strong><br>
+                        <li><strong> 메타볼 만들어보기  1</strong><br>
+                            3개의 원을 주기적으로 랜덤하게 움직여보자<br>
+                            2 가지를 반드시 이해하자 <br>
+                            1) 특정 주기로 애니메이션 하는 트릭을 알아본다.<br>                            
+                            2) Idx가 원의 인덱스를 이해하고, 해시 파라메터에 idx 포함된 연산이 추가되면 원마다 다른 해쉬값을 얻어 오는 것을 이해<br><br>
+                            <img src="materials/chapter4/period.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
                             <div class="code-example">                     
 <code>uniform float2 iResolution;
 uniform float iTime;
@@ -432,29 +442,165 @@ vec2 randPos(float k, float idx) {
 }
 
 float randRad(float k, float idx) {
+    // 0.2 ~ 0.3 보간
     return mix(0.20, 0.30, hash11(k * 19.0 + idx * 131.0));
 }
 
 // 구간별 랜덤 모핑
 void getRandomMorph(out vec2 P[3], out float R[3], float t) {
-    float period = 2.7;
-    float seg = floor(t / period);
-    float ft = (t / period) - seg;
-    float w = smoothstep(0.0, 1.0, ft);
+    float period = 2.7; // 한 구간의 길이
+    float seg = floor(t / period); // 몇번째 구간
+    float ft = (t / period) - seg; // 구간 진행도. 3.27 - 3 = 0.27 = 27%
+    float w = smoothstep(0.0, 1.0, ft); // 2.7초 주기에 해당하는 보간된 값.
 
+    // idx는 원의 인덱스
     for (int i = 0; i < 3; i++) {
         float idx = float(i);
         vec2 A = randPos(seg + idx * 0.37, idx);
-        vec2 B = randPos(seg + 1.0 + idx * 0.37, idx);
+        vec2 B = randPos((seg + 1.0) + idx * 0.37, idx);
         float RA = randRad(seg + idx * 0.51, idx);
-        float RB = randRad(seg + 1.0 + idx * 0.51, idx);
+        float RB = randRad((seg + 1.0) + idx * 0.51, idx);
         
         vec2 p = mix(A, B, w);
         float r = mix(RA, RB, w);
         
+        P[i] = p;
+        R[i] = r;
+    }
+}
+
+float drawCircle(float2 pos, float2 center, float radius) {
+    float dist = distance(pos, center);    
+    return step(dist, radius);
+}
+
+half4 main(float2 fragCoord) {
+    vec2 uv = (fragCoord / iResolution);
+    uv.y = 1.- uv.y;
+    uv -= .5;
+
+    // 랜덤 모핑으로 centers와 radii 생성
+    vec2 centers[3];
+    float radii[3];
+    getRandomMorph(centers, radii, iTime);
+
+    // 파라미터 설정
+    float threshold = 1.35;
+    float edge = 1.5 / iResolution.y;
+    vec3 fillColor = vec3(0.18, 0.78, 1.00);
+    vec3 bgColor = vec3(0.0);
+
+    // 메타볼 그리기 (파라미터화된 함수 사용)
+    vec3 color = vec3(0.0);
+    color += drawCircle(uv, centers[0], radii[0]);
+    color += drawCircle(uv, centers[1], radii[1]);
+    color += drawCircle(uv, centers[2], radii[2]);
+    return vec4(color, 1.0);
+}</code>
+                            </div>
+                        </li>
+                    </ul>
+                    <ul>                                                   
+                        <li><strong> 메타볼 만들어보기 2 </strong><br>
+                            장력 구하기 (표면장력, 자기장,. ..)<br>
+                            <img src="materials/chapter4/field.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                            <img src="materials/chapter4/field2.png" alt="circle" style="max-width: 100%; height: auto; margin-bottom: 10px;"><br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float iTime;
+
+float metaballField(vec2 point, vec2 centers[3], float radii[3]) {
+    float sum = 0.0;
+    float eps = 1e-4;
+
+    for (int i = 0; i < 3; i++) {
+        float d = length(point - centers[i]);
+        sum += (radii[i] * radii[i]) / (d * d + eps);
+    }
+
+    return sum;
+}
+
+half4 main(float2 fragCoord) {
+    vec2 uv = (fragCoord / iResolution);
+    uv.y = 1.- uv.y;
+    uv -= .5;
+
+    // 랜덤 모핑으로 centers와 radii 생성
+    vec2 centers[3];
+    centers[0] = vec2(0., 0.); centers[1] = vec2(0.2, 0.2); centers[2] = vec2(0.5, 0.5);
+    float radii[3];
+    radii[0] = 0.2; radii[1] = 0.15; radii[2] = 0.1;
+
+    vec3 fillColor = vec3(0.18, 0.78, 1.00);
+    vec3 bgColor = vec3(0.0);
+
+    // 메타볼 그리기 (파라미터화된 함수 사용)
+    vec3 color = fillColor;
+    float field = metaballField(uv, centers, radii);
+    
+    float edge1 = 2.85;
+    float smooth = 0.1;
+    field = smoothstep(edge1 - smooth, edge1 + smooth, field);
+    
+    color = vec3(field);
+    return vec4(color, 1.0);
+}</code>
+                            </div>
+                        </li>
+                    </ul>
+
+                    <ul>                                                   
+                        <li><strong> 메타볼 만들어보기 3 </strong><br>
+                            모두 합친 메타볼 코드 <br>
+                            <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform float iTime;
+
+// 해시/랜덤 유틸
+float hash11(float x) {
+    return fract(sin(x * 1.12345) * 43758.5453123);
+}
+
+vec2 hash21(float x) {
+    float a = hash11(x);
+    float b = hash11(x + 37.23);
+    return vec2(a, b);
+}
+
+vec2 randPos(float k, float idx) {
+    vec2 h = hash21(k * 13.0 + idx * 97.0) * 2.0 - 1.0;
+    return h * vec2(0.32, 0.32);
+}
+
+float randRad(float k, float idx) {
+    // 0.2 ~ 0.3 보간
+    return mix(0.10, 0.15, hash11(k * 19.0 + idx * 131.0));
+}
+
+// 구간별 랜덤 모핑
+void getRandomMorph(out vec2 P[3], out float R[3], float t) {
+    float period = 2.7; // 한 구간의 길이
+    float seg = floor(t / period); // 몇번째 구간
+    float ft = (t / period) - seg; // 구간 진행도. 3.27 - 3 = 0.27 = 27%
+    float w = smoothstep(0.0, 1.0, ft); // 2.7초 주기에 해당하는 보간된 값.
+
+    // idx는 원의 인덱스
+    for (int i = 0; i < 3; i++) {
+        float idx = float(i);
+        vec2 A = randPos(seg + idx, idx);
+        vec2 B = randPos((seg + 1.0) + idx, idx);
+        float RA = randRad(seg + idx * 0.51, idx);
+        float RB = randRad((seg + 1.0) + idx * 0.51, idx);
+        
+        vec2 p = mix(A, B, w);
+        float r = mix(RA, RB, w);
+                
         float s1 = sin(t * 1.7 + idx * 2.1);
         float s2 = sin(t * 3.9 + idx * 1.3);
+        // 미세한 떨림을 추가.
         p += 0.02 * vec2(s1, s2);
+        // 미세하게 반지름 크기 변화
         r *= (1.0 + 0.03 * sin(t * 2.3 + idx));
         p.y -= 0.05;
         
@@ -476,29 +622,23 @@ float metaballField(vec2 point, vec2 centers[3], float radii[3]) {
     return sum;
 }
 
-// 필드를 마스크로 변환
-float metaballMask(float field, float threshold, float edge) {
-    return smoothstep(threshold - edge, threshold + edge, field);
+// 필드를(0~무한대) 마스크(0~1)로 변환
+float metaballMask(float threshold, float edge, float x) {
+    return smoothstep(threshold - edge, threshold + edge, x);
 }
 
-// 메타볼 그리기 (파라미터: point, centers[], radii[], threshold, edge, fillColor, bgColor)
 vec3 drawMetaballs(vec2 point, vec2 centers[3], float radii[3], 
                 float threshold, float edge, vec3 fillColor, vec3 bgColor) {
     float field = metaballField(point, centers, radii);
-    float mask = metaballMask(field, threshold, edge);
+    float mask = metaballMask(threshold, edge, field);
     return mix(bgColor, fillColor, mask);
 }
 
 half4 main(float2 fragCoord) {
-    vec2 R = iResolution;
-    vec2 uv = (fragCoord - 0.5 * R) / R.y;
+    vec2 uv = (fragCoord / iResolution);
+    uv.y = 1.- uv.y;
+    uv -= .5;
     float t = iTime;
-
-    // 약간의 전체 스케일/회전
-    float ang = 0.02 * sin(t * 0.6);
-    mat2 rot = mat2(cos(ang), -sin(ang), sin(ang), cos(ang));
-    vec2 point = rot * uv * (1.0 + 0.015 * sin(t * 0.8));
-
     // 랜덤 모핑으로 centers와 radii 생성
     vec2 centers[3];
     float radii[3];
@@ -506,16 +646,14 @@ half4 main(float2 fragCoord) {
 
     // 파라미터 설정
     float threshold = 1.35;
-    float edge = 1.5 / R.y;
+    float edge = 1.5 / iResolution.y;
     vec3 fillColor = vec3(0.18, 0.78, 1.00);
     vec3 bgColor = vec3(0.0);
 
-    // 메타볼 그리기 (파라미터화된 함수 사용)
-    vec3 color = drawMetaballs(point, centers, radii, threshold, edge, fillColor, bgColor);
-
+    vec3 color = vec3(0.0);
+    color = drawMetaballs(uv, centers, radii, threshold, edge, fillColor, bgColor);
     return vec4(color, 1.0);
 }
-
 </code>
                             </div>
                         </li>
@@ -529,7 +667,7 @@ half4 main(float2 fragCoord) {
                     <textarea class="code-editor" id="editor2">
 uniform float2 iResolution;
 half4 main(float2 fragCoord) {    
-    return half4(0., .5, 0., 1.);
+    return vec4(0.0, 1.0, 0.0, 1.0);
 }
 </textarea>
                     <div class="controls">
