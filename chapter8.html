@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKSL 셰이더 교육 자료</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <h1> SKSL 셰이더 교육 자료</h1>
+        <p> Chapter 8. 물방울 </p>
+
+        <nav class="chapter-nav">
+            <a href="index.html" class="chapter-btn"> 0. 기본 함수 설명 </a>
+            <a href="chapter1.html" class="chapter-btn">1. 기본 도형과 패턴
+            <a href="chapter2.html" class="chapter-btn">2. 기본 도형 회전 이동 확대
+            <a href="chapter3.html" class="chapter-btn">3. 랜덤 함수와 노이즈 함수 </a><br>
+            <a href="chapter4.html" class="chapter-btn">4. Fractal </a>
+            <a href="chapter5.html" class="chapter-btn">5. 이미지 필터링 및 컬러 커브 </a>
+            <a href="chapter6.html" class="chapter-btn">6. 블러 알고리즘 </a>
+            <a href="chapter7.html" class="chapter-btn">7. 멀티 패스 </a>
+            <a href="chapter8.html" class="chapter-btn active">8. 물방울 </a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="lesson">
+            <div class="lesson-header">
+                <div class="lesson-title"> 이미지 샘플링 해보기 </div>
+                <div class="lesson-description">
+                    <h3> 학습 목표</h3>
+                    가우시안 블러 알고리즘 만들어보기<br>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts1')">
+                    <h4> 그래프 그려보기  ( 라이브러리 포함 ) </h4><br>                                        
+                    <span class="toggle-icon" id="icon-concepts1">▼</span>
+                </div>
+                <div class="concepts-content" id="concepts1">
+                    <ul>                                                   
+                        <li><strong> 랜덤 함수 </strong><br>
+                            <div class="code-example">                     
+    <code>float sigma = 0.2;   
+float y = exp(-(p.x*p.x) / (2.0 * sigma * sigma)) / (sqrt(2.0 * 3.14159265) * sigma);</code>
+                            </div>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 실습 코드</div>
+                    <textarea class="code-editor" id="editor1">
+float y = p.x;           
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(1)"> 실행</button>                     
+                    </div>
+                </div>
+                
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error1"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading1">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas1" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="key-concepts">
+                <div class="concepts-header" onclick="toggleConcepts('concepts8')">
+                    <h4> 가우시안 블러 알고리즘 </h4><br>            
+                    <span class="toggle-icon" id="icon-concepts1">▼</span>
+                </div>        
+                <div class="concepts-content" id="concepts8">                            
+                    <div class="code-example">                     
+<code>uniform float2 iResolution;
+uniform shader iTexture;
+
+half4 main(float2 fragCoord) {
+}</code>
+                            </div>
+                        </li>                        
+                    </ul>                  
+                </div>
+            </div>
+            <div class="lesson-content">
+                <div class="editor-section">
+                    <div class="section-header">SKSL 코드</div>
+                    <textarea class="code-editor" id="editor3">
+uniform float2 iResolution;
+uniform shader iTexture;
+uniform float iTime;
+
+float N11 (float st) {
+    return fract(sin(st * 78.233) * 43758.5453123);
+}
+
+float N12 (float2 st) {
+    return fract(sin(dot(st.xy,  vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
+float2 N22 (float2 st) {
+    float k = N12(st);
+    return float2(k, N12(st + k));
+}
+
+float N21 (float2 st) {
+    float2 k = N22(st);
+    return dot(k, N22(st + k));
+}
+
+float3 N13 (float st) {
+    float k = N11(st);
+    return float3(k, N11(st + k), N11(st + 2.0 * k));
+}
+
+float drawCircle(float2 uv, float2 center, float radius) {
+    return step(distance(uv, center), radius);
+}
+
+// https://graphicsimon.tistory.com/82
+// 이거보고 물방울 만들어보기....
+// https://www.youtube.com/watch?v=52TMliAWocY&list=PLGmrMu-IwbguU_nY2egTFmlg691DN7uE5&index=13
+
+float dropLayer(float2 uv, float t) {
+    //uv.y += t * 0.75;
+    
+    // grid (12, 2)
+    float2 a = float2(6., 1.);
+    float2 grid = a * 2.;
+    uv *= grid;
+
+    float2 id = floor(uv);
+    float u = N21(id);
+
+    return u * drawCircle(uv, vec2(.0), 0.3);
+
+    // 어긋나게 하는것 렌더링해보자...
+    //float colShift = N(id.x);
+    //uv.y += colShift;
+    //id = floor(uv * grid);
+    //vec3 n = N13(id.x * 35.2 + id.y * 2376.1);
+
+    //return id;
+}
+
+half4 main(float2 fragCoord) {
+    float2 uv = fragCoord / iResolution - .5;
+    
+    float drop = dropLayer(uv, iTime);
+    float3 color = float3(drop);
+    return half4(color, 1.);
+}
+
+</textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="compileShader(3)">실행</button>
+                    </div>
+                    <div style="padding: 10px; background-color: #494949; border-radius: 1px;">
+                        <label for="radiusSlider3" style="display: inline-block; width: 100px;">Blur Radius:</label>
+                        <input type="range" id="radiusSlider3" min="0" max="20" value="5" step="0.5" 
+                            style="width: 150px; vertical-align: middle;"
+                            oninput="updateRadius(3, this.value)">
+                        <span id="radiusValue3" style="display: inline-block; width: 40px; margin-left: 10px;">5.0</span>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <div class="section-header">미리보기</div>
+                    <div id="error3"></div>
+                    <div class="preview-container">
+                        <div class="loading" id="loading3">CanvasKit 로딩 중...</div>
+                        <canvas class="preview-canvas" id="canvas3" width="300" height="300" style="display: none;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateRadius(lessonNum, value) {
+            document.getElementById(`radiusValue${lessonNum}`).textContent = parseFloat(value).toFixed(1);
+            if (window.setUniformValue) {
+                window.setUniformValue(lessonNum, 'blurRadius', parseFloat(value));
+            }
+        }
+
+        function toggleConcepts(conceptsId) {
+            const content = document.getElementById(conceptsId);
+            const icon = document.getElementById(`icon-${conceptsId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.textContent = '▲';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                icon.textContent = '▼';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        function toggleCode(codeId) {
+            const content = document.getElementById(codeId);
+            const toggle = document.getElementById(`toggle-${codeId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = '400px';
+                toggle.textContent = '접기';
+            } else {
+                content.classList.add('collapsed');
+                content.style.maxHeight = '0';
+                toggle.textContent = '펼치기';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const sectionsToClose = ['concepts1', 'concepts2', 'concepts3', 'concepts4', 'concepts5', 'concepts6', 'concepts7', 'concepts8'];
+            
+            sectionsToClose.forEach(conceptsId => {
+                const content = document.getElementById(conceptsId);
+                const icon = document.getElementById(`icon-${conceptsId}`);
+                const header = document.querySelector(`[onclick="toggleConcepts('${conceptsId}')"]`);
+                
+                if (content) {
+                    content.classList.add('collapsed');
+                    content.style.maxHeight = '0';
+                }
+                if (icon) {
+                    icon.textContent = '▼';
+                }
+                if (header) {
+                    header.classList.add('closed');
+                }
+            });
+        });
+
+        function compileShader(id) {
+            console.log(`Compiling shader ${id}...`);
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvaskit-wasm/0.38.0/canvaskit.min.js"></script>
+    <script src="shader-tutorial.js"></script>
+</body>
+</html>

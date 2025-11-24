@@ -1,0 +1,31 @@
+
+#define S(a, b, t) smoothstep(a, b, t)
+
+vec3 N13(float p) {
+    //  from DAVE HOSKINS
+   vec3 p3 = fract(vec3(p) * vec3(.1031,.11369,.13787));
+   p3 += dot(p3, p3.yzx + 19.19);
+   return fract(vec3((p3.x + p3.y)*p3.z, (p3.x+p3.z)*p3.y, (p3.y+p3.z)*p3.x));
+}
+
+vec4 N14(float t) {
+	return fract(sin(t*vec4(123., 1024., 1456., 264.))*vec4(6547., 345., 8799., 1564.));
+}
+float N(float t) {
+    return fract(sin(t*12345.564)*7658.76);
+}
+
+float Saw(float b, float t) {
+	return S(0., b, t)*S(1., b, t);
+}
+
+
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+	vec2 uv = (fragCoord.xy-.5*iResolution.xy) / iResolution.y;
+    vec2 UV = fragCoord.xy/iResolution.xy;
+    vec3 M = iMouse.xyz/iResolution.xyz;
+    float T = iTime+M.x*2.;
+    fragColor = vec4(uv, 1., 1.);
+}
