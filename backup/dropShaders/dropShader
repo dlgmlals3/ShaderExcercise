@@ -16,16 +16,87 @@ float N(float t) {
 }
 
 float Saw(float b, float t) {
-	return S(0., b, t)*S(1., b, t);
+	return S(0., b, t) * S(1., b, t);
 }
 
+vec2 DropLayer2(vec2 uv, float t) {
+    // 1. 원본 UV 저장
+    vec2 UV = uv;
+    
+    // 2. 시간에 따라 UV를 아래로 이동 (빗방울이 떨어지는 효과)
+    //uv.y += t * 0.75;
+    uv.y += t * 0.85;
 
+    // 3. 그리드 설정 (6x1 비율의 셀로 분할)
+    vec2 a = vec2(6., 1.);
+    vec2 grid = a * 2.;
+    vec2 id = floor(uv * grid);  // 현재 셀의 ID
+
+
+    // 4. 각 열마다 랜덤한 오프셋 적용 (빗방울이 다른 시간에 떨어지도록)
+    float colShift = N(id.x); 
+    uv.y += colShift;
+    
+    ///////////////////////////////////////////////////////////////
+    // 5. 업데이트된 셀 ID 재계산
+    id = floor(uv * grid);
+    vec3 n = N13(id.x * 35.2 + id.y * 2376.1);  // 3D 랜덤 값
+    vec2 st = fract(uv * grid) - vec2(.5, .5);  // 셀 내부 좌표 (-0.5~0.5, 0~1)
+
+    //if (st.x < -0.4) return vec2(1.0);  // 빗방울이 그려지는 영역 제한
+    if (st.y < -0.45) return vec2(1.0);  // 빗방울이 그려지는 영역 제한
+    // 6. 빗방울의 X 위치 계산 (흔들림 효과 포함, 이건 나중에)
+    
+    float x = n.x - .5;  // -0.5 ~ 0.5 범위의 랜덤 X 위치
+    float y = UV.y * 20.;
+    //float wiggle = sin(y + sin(y));  // 이중 sin으로 복잡한 흔들림
+    //x +=  (abs(x));// * (n.z - .5);  // 중앙에 가까울수록 더 많이 흔들림
+    //x += wiggle * (.5 - abs(x)) * (n.z - .5);  // 중앙에 가까울수록 더 많이 흔들림
+    //x *= 0.7;  // X 범위 축소
+    
+
+    // 7. 빗방울의 Y 위치 계산 (시간에 따라 떨어짐)
+    float ti = fract(t);  // 각 방울마다 다른 시작 시간
+    //y = (Saw(.85, ti) - .5) * .9 + .5;  // Saw 함수로 톱니파 패턴
+    y = (Saw(.55, ti));  // Saw 함수로 톱니파 패턴
+    //y = fract(ti);
+    vec2 p = vec2(0, y);
+    
+
+    // 8. 메인 빗방울 계산
+    float d = length((st - p) * a.yx);  // 비율 조정된 거리
+    float mainDrop = S(.4, .0, d);  // smoothstep으로 부드러운 원
+    return vec2(mainDrop);
+    
+    // 내일은 꼬리
+    // 9. 빗방울 꼬리(trail) 계산
+    float r = sqrt(S(1., y, st.y));  // Y 위치에 따른 반경    
+    float cd = abs(st.x - x);  // 중심으로부터의 수평 거리
+    float trail = S(.23 * r, .15 * r * r, cd);  // 꼬리의 너비
+    float trailFront = S(-.02, .02, st.y - y);  // 꼬리의 앞부분
+    trail *= trailFront*r*r;
+    
+
+    // 10. 작은 물방울들 계산
+    y = UV.y;
+    float trail2 = S(.2 * r, .0, cd);
+    float droplets = max(0., (sin(y * (1. - y) * 120.) - st.y)) * trail2 * trailFront * n.z;
+    y = fract(y * 10.) + (st.y - .5);
+    float dd = length(st - vec2(x, y));
+    droplets = S(.3, 0., dd);
+
+    // 11. 최종 결과 합성
+    float m = mainDrop+droplets*r*trailFront;
+    
+    return vec2(m, trail);
+}
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
-	vec2 uv = (fragCoord.xy-.5*iResolution.xy) / iResolution.y;
+	vec2 uv = (fragCoord.xy - .5 * iResolution.xy) / iResolution.y;
     vec2 UV = fragCoord.xy/iResolution.xy;
     vec3 M = iMouse.xyz/iResolution.xyz;
-    float T = iTime+M.x*2.;
-    fragColor = vec4(uv, 1., 1.);
+    float T = iTime + M.x * 2.;
+    vec2 drop = DropLayer2(uv, T);
+    fragColor = vec4(drop, 0., 1.);
 }
