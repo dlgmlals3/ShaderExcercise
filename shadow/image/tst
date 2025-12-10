@@ -1,0 +1,9 @@
+raterization : 원근 나눗셈 (/w), 뷰포트 변환 (-1, -1 -> 0 ~ 1) 후 스크린좌표계
+0번 그림은 gl_position 내장변수는 rasterization 해줌.
+attirubte는 따로 필요한 연산 (원근 나눗셈, 뷰포트 전환 ) 
+
+섀도우 맵에서 glPosition을 light space를 이동하기 위해 버텍스 셰이더에서 light 공간 mvp를 곱하면 됨
+섀도우 맵을 사용하는 두번째 렌더링에서 샘프링 하기 위해 s,t와 z 값이 필요
+vec3 lightPos
+이때 LightPos는 light 공간 mvp를 곱하는 것은 맞음.
+!!!!! LightPos는 내장변수가 아니기 때문에 rasterization에서 원근 나눗셈, 뷰포트 전환 안해줌. --> 계산 추가 필요

@@ -66,8 +66,7 @@ vec2 DropLayer2(vec2 uv, float t) {
     // 8. 메인 빗방울 계산
     float d = length((st - p) * a.yx);  // 비율 조정된 거리
     float mainDrop = S(.4, .0, d);  // smoothstep으로 부드러운 원
-    return vec2(mainDrop);
-    
+
     // 내일은 꼬리
     // 9. 빗방울 꼬리(trail) 계산
     float r = sqrt(S(1., y, st.y));  // Y 위치에 따른 반경    
@@ -76,7 +75,8 @@ vec2 DropLayer2(vec2 uv, float t) {
     float trailFront = S(-.02, .02, st.y - y);  // 꼬리의 앞부분
     trail *= trailFront*r*r;
     
-
+    return vec2(cd);
+    
     // 10. 작은 물방울들 계산
     y = UV.y;
     float trail2 = S(.2 * r, .0, cd);

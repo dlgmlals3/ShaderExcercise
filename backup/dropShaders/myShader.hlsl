@@ -46,20 +46,27 @@ vec3 DropLayer(vec2 uv, float t) {
     uv.y += time + offset;
     uv = fract(uv * grid) - .5;    
     // debug
-    //if (uv.x < 0.5 && uv.x > 0.45) return vec3(1.0, 0.0, 0.0);
-    //if (uv.y < 0.5 && uv.y > 0.45) return vec3(1.0, 0.0, 0.0);    
-    
+    if (uv.x < 0.5 && uv.x > 0.45) return vec3(1.0, 0.0, 0.0);
+    if (uv.y < 0.5 && uv.y > 0.45) return vec3(1.0, 0.0, 0.0);        
     float y = curve(.8, fract(t + offset));
-    //y = (curve(.85, fract(t * 2.)) - .5) * .9 + .5; 
     uv.y -= y;
-
     uv.x *= ratio;    
+
     float distance = length(uv);
     float circleRadius = 0.05;
-    float circleSoft = 0.01;
+    float circleSoft = 0.05;
     float isCircle = 1. - smoothstep(circleRadius - circleSoft, circleRadius + circleSoft, distance);
+    vec3 drop = vec3(vec2(isCircle), 0);
 
-    return vec3(vec2(isCircle), 0);
+
+    // 꼬리 만들기 
+    vec3 n = N13(id.x * 35.2 + id.y * 2376.1);  // 3D 랜덤 값
+    float x = n.x - .5;     
+    float r = (smoothstep(1.0, y, uv.y + .3));
+    float cd = abs(uv.x - x);// 중심으로부터의 수평 거리
+    
+    drop = vec3(0, 0, cd);
+    return drop;
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
