@@ -103,8 +103,23 @@
         // dlgmlals3
         const debuggingRendering = false;
 
-        // 섀도우맵 이제대로 안만들어지는 듯
-        // 카메라를 멀게 하면 플레인이랑 상자의 뎁스값이 커져야하는데 .. 디버깅을 어떻게 할지 다시 생각해보자.
+        const frustumVertexShader = `
+            attribute vec3 aPosition;
+            uniform mat4 uMVP;
+            
+            void main() {
+                gl_Position = uMVP * vec4(aPosition, 1.0);
+            }
+        `;
+
+        const frustumFragmentShader = `
+            precision highp float;
+            uniform vec3 uColor;
+            
+            void main() {
+                gl_FragColor = vec4(uColor, 1.0);
+            }
+        `;
 
         // 정점 쉐이더 - 쉐도우맵 생성용
         const shadowVertexShader = `
@@ -118,8 +133,7 @@
             }
         `;
 
-        // 프래그먼트 쉐이더 - 쉐도우맵 생성용        
-        // 디버깅을 위해서 zBuffer를 
+        // 프래그먼트 쉐이더 - 쉐도우맵 생성용                
         const shadowFragmentShader = `
             precision highp float;
             void main() {      
@@ -371,6 +385,10 @@
         const renderFragShader = createShader(gl, gl.FRAGMENT_SHADER, renderFragmentShader);
         const renderProgram = createProgram(gl, renderVertShader, renderFragShader);
 
+        const frustumVertShader = createShader(gl, gl.VERTEX_SHADER, frustumVertexShader);
+        const frustumFragShader = createShader(gl, gl.FRAGMENT_SHADER, frustumFragmentShader);
+        const frustumProgram = createProgram(gl, frustumVertShader, frustumFragShader);
+
         // 매트릭스 유틸리티
         const mat4 = {
             create: () => new Float32Array([
@@ -488,7 +506,60 @@
                     0, 0, 1, 0,
                     0, 0, 0, 1
                 ]);
+            },
+
+            inverse: (m) => {
+                const inv = new Float32Array(16);
+                
+                inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] +
+                        m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+                inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] -
+                        m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+                inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] +
+                        m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+                inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] -
+                        m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+                
+                inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] -
+                        m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+                inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] +
+                        m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+                inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] -
+                        m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+                inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] +
+                        m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+                
+                inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] +
+                        m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+                inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] -
+                        m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+                inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] +
+                        m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+                inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] -
+                        m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+                
+                inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] -
+                        m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+                inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] +
+                        m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+                inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] -
+                        m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+                inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] +
+                        m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+                
+                let det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+                
+                if (det === 0) return m;
+                
+                det = 1.0 / det;
+                
+                const result = new Float32Array(16);
+                for (let i = 0; i < 16; i++) {
+                    result[i] = inv[i] * det;
+                }
+                return result;
             }
+
         };
 
         // 지오메트리 생성 (평면 + 큐브)
@@ -530,9 +601,26 @@
                 0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0,  0, 1, 0
             ]);
             
+            const frustumLines = new Float32Array([
+                -1, -1, -1,  1, -1, -1,
+                1, -1, -1,  1,  1, -1,
+                1,  1, -1, -1,  1, -1,
+                -1,  1, -1, -1, -1, -1,
+                
+                -1, -1,  1,  1, -1,  1,
+                1, -1,  1,  1,  1,  1,
+                1,  1,  1, -1,  1,  1,
+                -1,  1,  1, -1, -1,  1,
+                
+                -1, -1, -1, -1, -1,  1,
+                1, -1, -1,  1, -1,  1,
+                1,  1, -1,  1,  1,  1,
+                -1,  1, -1, -1,  1,  1
+            ]);
             return {
                 plane: { vertices: planeVertices, normals: planeNormals },
-                cube: { vertices: cubeVertices, normals: cubeNormals }
+                cube: { vertices: cubeVertices, normals: cubeNormals },
+                frustomLine : {vertices : frustumLines}
             };
         }
 
@@ -554,7 +642,11 @@
         const cubeNormalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeNormalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, geometry.cube.normals, gl.STATIC_DRAW);
-
+        
+        const frustumLineBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, frustumLineBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, geometry.frustomLine.vertices, gl.STATIC_DRAW);
+        
         // 기본 UV 버퍼 (평면과 큐브용)
         const defaultUVs = new Float32Array([
             0, 0,  0, 1,  1, 1,
@@ -1120,7 +1212,7 @@
             // dlgmlals3
             const lightTarget = [0, 0, 0];            
             // texture map width height 동일해서 aspect 1.0으로 행주어야 함.
-            const lightProjection = mat4.perspective(Math.PI / 4, 1.0, 0.1, 100);
+            const lightProjection = mat4.perspective(Math.PI / 4, 1.0, 0.1, 50);
             const lightView = mat4.lookAt(lightPos, lightTarget, [0, 1, 0]);                                    
             //const lightMVP = mat4.multiply(lightProjection, lightView);
             const lightMVP = mat4.multiply(lightView, lightProjection);                                 
@@ -1183,6 +1275,38 @@
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);   
         }
 
+        function renderFrustomLine(lightView, lightProjection, view, projection) {
+            // Frustum 그리기
+            gl.useProgram(frustumProgram);
+            
+            const frustumPosLoc = gl.getAttribLocation(frustumProgram, 'aPosition');
+            const frustumMVPLoc = gl.getUniformLocation(frustumProgram, 'uMVP');
+            const frustumColorLoc = gl.getUniformLocation(frustumProgram, 'uColor');
+            
+            // 정확한 변환 순서:
+            // 1. lightProjection의 역행렬로 NDC -> 라이트 뷰 공간
+            // 2. lightView의 역행렬로 라이트 뷰 공간 -> 월드 공간
+            // 3. view로 월드 공간 -> 카메라 뷰 공간
+            // 4. projection으로 카메라 뷰 공간 -> NDC
+            
+            const lightProjInv = mat4.inverse(lightProjection);
+            const lightViewInv = mat4.inverse(lightView);
+            
+            // 월드 공간으로 변환
+            const frustumWorld = mat4.multiply(lightViewInv, lightProjInv);
+            
+            // 카메라 공간으로 변환
+            const frustumMVP = mat4.multiply(projection, mat4.multiply(view, frustumWorld));
+            
+            gl.uniformMatrix4fv(frustumMVPLoc, false, frustumMVP);
+            gl.uniform3f(frustumColorLoc, 1.0, 1.0, 0.0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, frustumLineBuffer);
+            gl.enableVertexAttribArray(frustumPosLoc);
+            gl.vertexAttribPointer(frustumPosLoc, 3, gl.FLOAT, false, 0, 0);
+
+            gl.drawArrays(gl.LINES, 0, 24);            
+        }
         // 렌더링 함수
         function render() {
             shadowRender();
@@ -1205,13 +1329,13 @@
                 Math.sin(angle) * 5
             ];
             const lightTarget = [0, 0, 0];
-            const lightProjection = mat4.perspective(Math.PI / 4, 1.0, 0.1, 100);
+            const lightProjection = mat4.perspective(Math.PI / 4, 1.0, 0.1, 50);
             const lightView = mat4.lookAt(lightPos, lightTarget, [0, 1, 0]);
             const lightMVP = mat4.multiply(lightView, lightProjection);
             //const lightMVP = mat4.multiply(lightProjection, lightView);
             
             // 카메라 위치 계산            
-            const projection = mat4.perspective(Math.PI / 4, canvas.width / canvas.height, 0.1, 100);         
+            const projection = mat4.perspective(Math.PI / 4, canvas.width / canvas.height, 0.1, 50);         
             const camX = cameraDistance * Math.cos(cameraRotationX) * Math.sin(cameraRotationY);
             const camY = cameraDistance * Math.sin(cameraRotationX);
             const camZ = cameraDistance * Math.cos(cameraRotationX) * Math.cos(cameraRotationY);   
@@ -1327,7 +1451,9 @@
                         gl.drawArrays(gl.TRIANGLES, 0, mesh.indexCount);
                     }
                 });
-            }    
+            }                
+            renderFrustomLine(lightView, lightProjection, modelView, projection);
+
             // render is driven from shadowRender loop so it does not request another frame
             requestAnimationFrame(render);
         }

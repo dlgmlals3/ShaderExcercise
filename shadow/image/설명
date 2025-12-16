@@ -1,0 +1,22 @@
+중요 로직
+1) 뎁스 텍스처 프레임버퍼 생성 후 어태치
+2) 뎁스용 프레임버퍼 바인딩
+2.1) orthographic, perspective ?
+3) 물체 Draw --> 뎁스 버퍼 저장
+3.1) 뎁스 버퍼 렌더링 셰이더
+
+4) 메인 프레임버퍼 바인딩
+5) Vec3 LightPos 계산
+6) 물체 Draw --> 실제 Draw
+6.1) 리얼 렌더링 셰이더
+
+7.0) 뎁스 카메라 잘보이는 것 확인
+7.1) bias 컨트롤
+7.2) orthographic test 
+7.3) perspective test
+7.4) Depth Texture Resolution
+
+8) 프러스텀 라인 렌더링
+
+9) PCF
+10) PCSS
