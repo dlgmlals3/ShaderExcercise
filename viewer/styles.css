@@ -1,0 +1,51 @@
+@import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+
+body {
+  margin: 0;
+}
+
+canvas {
+  width: 100vw;
+  height: 100vh;
+  display: block;
+}
+
+.gman-widget-value {
+  min-width: 5em;
+}
+
+/* 설정창 좌측 상단 */
+#uiContainer {
+  position: fixed;
+  right: 12px;
+  top: 12px;
+  left: auto;
+  z-index: 9999;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 12px;
+  color: white;
+  min-width: 360px;
+  max-width: 420px;
+}
+
+#gltfControls {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(42, 42, 42, 0.35);
+  border-radius: 6px;
+  padding: 10px;
+}
+
+#gltfControls label {
+  color: white;
+  margin-right: 10px;
+}
+
+#modelStatus {
+  color: #bbb;
+  margin-left: 10px;
+}

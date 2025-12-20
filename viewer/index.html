@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL Shadow Mapping with GLTF/GLB Texture Support</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <canvas id="canvas"></canvas>
+
+  <div id="uiContainer">
+    <div id="ui"></div>
+    <div id="gltfControls">
+      <label>GLTF/GLB:</label>
+      <input type="file" id="gltfFile" accept=".gltf,.glb" />
+      <span id="modelStatus">대기 중...</span>
+    </div>
+  </div>
+
+  <!-- External libraries -->
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-lessons-ui.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/webgl-utils.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/m4.js"></script>
+  <script src="https://webglfundamentals.org/webgl/resources/primitives.js"></script>
+  
+  <!-- Application scripts (순서 중요!) -->
+  <script src="./js/shaders.js"></script>
+  <script src="./js/shadow.js"></script>
+  <script src="./js/gltf.js"></script>
+  <script src="./js/main.js"></script>
+</body>
+</html>
