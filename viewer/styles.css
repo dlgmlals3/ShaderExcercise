@@ -1,8 +1,10 @@
-@import url("https://webglfundamentals.org/webgl/resources/webgl-tutorials.css");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
 body {
   margin: 0;
+  font-family: 'Inter', sans-serif;
 }
+
 
 canvas {
   width: 100vw;
@@ -10,42 +12,83 @@ canvas {
   display: block;
 }
 
-.gman-widget-value {
-  min-width: 5em;
-}
-
-/* 설정창 좌측 상단 */
+/* 설정창 우측 상단 */
 #uiContainer {
   position: fixed;
-  right: 12px;
-  top: 12px;
-  left: auto;
+  right: 10px;
+  top: 10px;
   z-index: 9999;
   pointer-events: auto;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
-  padding: 12px;
-  color: white;
-  min-width: 360px;
-  max-width: 420px;
+  padding: 15px;
+  color: #fff;
+  min-width: 280px;
+  max-width: 350px;
+  font-size: 13px;
 }
 
-#gltfControls {
-  margin-top: 10px;
+#ui {
+  width: 100%;
+}
+
+/* 각 위젯을 한 줄로 */
+.gman-widget-outer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 마지막 항목은 구분선 없음 */
+.gman-widget-outer:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* 라벨 스타일 */
+.gman-widget-label {
+  color: #fff;
+  font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 값 표시 스타일 */
+.gman-widget-value {
+  color: #4CAF50;
+  font-weight: 600;
+  min-width: 3.5em;
+  text-align: right;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* 구분선 클래스 */
+.section-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
   padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(42, 42, 42, 0.35);
-  border-radius: 6px;
-  padding: 10px;
+  margin-top: 10px;
 }
 
-#gltfControls label {
-  color: white;
-  margin-right: 10px;
+/* 슬라이더 */
+.gman-widget-slider {
+  flex: 1;
+  min-width: 100px;
 }
 
-#modelStatus {
-  color: #bbb;
-  margin-left: 10px;
+input[type="range"] {
+  width: 100%;
+  margin: 0;
+}
+
+/* 체크박스 */
+input[type="checkbox"] {
+  margin: 0;
+  flex-shrink: 0;
 }

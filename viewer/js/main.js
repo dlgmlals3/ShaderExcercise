@@ -3,7 +3,6 @@
 function main() {
   console.log('main Start..');
 
-  // Inject shader code into DOM
   injectShaders();
 
   const canvas = document.querySelector('#canvas');
@@ -13,13 +12,20 @@ function main() {
   const ext = gl.getExtension('WEBGL_depth_texture');
   if (!ext) return alert('need WEBGL_depth_texture');
 
-  // Setup GLSL programs
   const textureProgramInfo = webglUtils.createProgramInfo(gl, ['vertex-shader-3d', 'fragment-shader-3d']);
   const colorProgramInfo   = webglUtils.createProgramInfo(gl, ['color-vertex-shader', 'color-fragment-shader']);
 
-  // Create geometries
   const planeBufferInfo  = primitives.createPlaneBufferInfo(gl, 20, 20, 1, 1);
-
+  const sphereBufferInfo = primitives.createSphereBufferInfo(
+      gl,
+      1,  // radius
+      32, // subdivisions around
+      24, // subdivisions down
+  );
+  const cubeBufferInfo = primitives.createCubeBufferInfo(
+      gl,
+      2,  // size
+  );
   const cubeLinesBufferInfo = webglUtils.createBufferInfoFromArrays(gl, {
     position: [
       -1, -1, -1,  1, -1, -1, -1,  1, -1,  1,  1, -1,
@@ -32,7 +38,6 @@ function main() {
     ],
   });
 
-  // Checkerboard texture (fallback)
   const checkerboardTexture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, checkerboardTexture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, 8, 8, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE,
@@ -50,7 +55,6 @@ function main() {
   gl.generateMipmap(gl.TEXTURE_2D);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-  // 1x1 white texture (fallback when no baseColorTexture)
   function create1x1TextureRGBA(gl, r, g, b, a) {
     const t = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, t);
@@ -83,20 +87,63 @@ function main() {
     lightFar: 50,
     shadowSoftness: 1.0,
     shadowMapSize: 4096,
+
+    // Transmission controls
+    transmissionEnabled: true,
+    transmissionStrength: 1.0,
   };
 
-  // Initialize shadow system (after settings)
   const shadowSystem = new ShadowSystem(gl, settings.shadowMapSize);
 
-  // Camera control state
+  // ---------- Transmission BTDF: Offscreen SceneColor RT ----------
+  const sceneColorRT = createRenderTarget(gl);
+
+  function createRenderTarget(gl) {
+    const fb = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+
+    const colorTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, colorTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    const depthTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, depthTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, colorTex, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depthTex, 0);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { fb, colorTex, depthTex, w: 0, h: 0 };
+  }
+
+  function resizeRenderTarget(rt, w, h) {
+    if (rt.w === w && rt.h === h) return;
+    rt.w = w; rt.h = h;
+
+    gl.bindTexture(gl.TEXTURE_2D, rt.colorTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    gl.bindTexture(gl.TEXTURE_2D, rt.depthTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, w, h, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null);
+  }
+
+  // ---------- Camera ----------
   let cameraDistance = 20;
   let cameraRotationX = 0;
   let cameraRotationY = 0.5;
+  let cameraTarget = [0, 0, 0];
   let isDragging = false;
+  let isPanning = false;
   let lastMouseX = 0;
   let lastMouseY = 0;
 
-  // UI setup (requires #ui)
   webglLessonsUI.setupUI(document.querySelector('#ui'), settings, [
     { type: 'slider', key: 'posX', min: -10, max: 10, change: render, precision: 2, step: 0.001 },
     { type: 'slider', key: 'posY', min: 1, max: 20, change: render, precision: 2, step: 0.001 },
@@ -112,6 +159,9 @@ function main() {
     { type: 'slider', key: 'lightFar', min: 1, max: 100, change: render, precision: 2, step: 0.1 },
     { type: 'slider', key: 'bias', min: 0.0, max: 0.1, change: render, precision: 4, step: 0.001 },
     { type: 'checkbox', key: 'frustumDebug', change: render },
+
+    { type: 'checkbox', key: 'transmissionEnabled', change: render },
+    { type: 'slider', key: 'transmissionStrength', min: 0, max: 1, change: render, precision: 2, step: 0.01 },
   ]);
 
   const fieldOfViewRadians = degToRad(60);
@@ -120,32 +170,36 @@ function main() {
     u_colorMult: [0.5, 0.5, 1, 1],
     u_color: [1, 0, 0, 1],
     u_texture: checkerboardTexture,
-    u_world: m4.translation(0, 0, 0),
+    u_world: m4.translation(0, -1, 0),
   };
 
-  // Initialize GLTF loader
+  const cubeUniforms = {
+      u_colorMult: [0.5, 1, 0.5, 1],  // lightgreen
+      u_color: [0, 0, 1, 1],
+      u_texture: checkerboardTexture,
+      u_world: m4.translation(3, 1, 0),
+  };
+  
+  // GLTFLoader 인스턴스 생성
   const gltfLoader = new GLTFLoader(gl);
-  let gltfModel = null; // { primitives, scale, offset }
+  let gltfModel = null;
 
-  // File UI
   const fileInput = document.getElementById('gltfFile');
   const modelStatus = document.getElementById('modelStatus');
 
-  fileInput.addEventListener('click', () => console.log('[GLTF] input clicked'));
-
   fileInput.addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
-    if (!file) { 
-      modelStatus.textContent = '선택 취소'; 
-      return; 
+    if (!file) {
+      modelStatus.textContent = '선택 취소';
+      return;
     }
 
     try {
       modelStatus.textContent = '로딩중: ' + file.name;
-
-      const { gltf, buffers } = await gltfLoader.loadFile(file);
-      gltfModel = await gltfLoader.parse(gltf, buffers);
-
+      
+      await gltfLoader.load(file);
+      gltfModel = await gltfLoader.parse();
+      
       modelStatus.textContent = '로딩 완료: ' + file.name;
       render();
     } catch (err) {
@@ -154,64 +208,81 @@ function main() {
     }
   });
 
-  // Mouse controls for camera
   canvas.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+    if (e.button === 0) {
+      isDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    } else if (e.button === 1) {
+      e.preventDefault();
+      isPanning = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    }
   });
 
   canvas.addEventListener('mousemove', (e) => {
-    if (!isDragging) return;
-
     const deltaX = e.clientX - lastMouseX;
     const deltaY = e.clientY - lastMouseY;
 
-    cameraRotationX += deltaX * 0.01;
-    cameraRotationY += deltaY * 0.01;
+    if (isDragging) {
+      cameraRotationX += deltaX * 0.01;
+      cameraRotationY += deltaY * 0.01;
+      cameraRotationY = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, cameraRotationY));
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      render();
+    } else if (isPanning) {
+      const panSpeed = cameraDistance * 0.002;
+      const right = [Math.cos(cameraRotationX), 0, -Math.sin(cameraRotationX)];
+      const up = [0, 1, 0];
 
-    // Clamp vertical rotation
-    cameraRotationY = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, cameraRotationY));
+      cameraTarget[0] -= right[0] * deltaX * panSpeed;
+      cameraTarget[1] -= right[1] * deltaX * panSpeed;
+      cameraTarget[2] -= right[2] * deltaX * panSpeed;
+      cameraTarget[0] -= up[0] * deltaY * panSpeed;
+      cameraTarget[1] += up[1] * deltaY * panSpeed;
+      cameraTarget[2] -= up[2] * deltaY * panSpeed;
 
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
-
-    render();
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      render();
+    }
   });
 
-  canvas.addEventListener('mouseup', () => {
-    isDragging = false;
+  canvas.addEventListener('mouseup', (e) => {
+    if (e.button === 0) isDragging = false;
+    else if (e.button === 1) isPanning = false;
   });
 
   canvas.addEventListener('mouseleave', () => {
     isDragging = false;
+    isPanning = false;
   });
 
-  // Wheel zoom
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    cameraDistance += e.deltaY * 0.01;
-    cameraDistance = Math.max(5, Math.min(100, cameraDistance));
+    cameraDistance += e.deltaY * 0.005;
+    cameraDistance = Math.max(1, Math.min(500, cameraDistance));
     render();
   });
 
-  // Auto-load default model
   async function loadDefaultModel() {
-    const defaultPath = './model/DamagedHelmet.glb';
-    
+    //const defaultPath = './model/TransmissionTest/TransmissionTest.gltf';
+    const defaultPath = './model/TransmissionTest.glb';
+    //const defaultPath = './model/DamagedHelmet.glb';
+    //const defaultPath = './model/TransmissionRoughnessTest.glb';
+
     try {
       modelStatus.textContent = '기본 모델 로딩 중...';
-      
       const response = await fetch(defaultPath);
-      if (!response.ok) {
-        throw new Error('기본 모델을 찾을 수 없습니다. 파일을 직접 선택해주세요.');
-      }
-      
+      if (!response.ok) throw new Error('기본 모델을 찾을 수 없습니다.');
+
       const arrayBuffer = await response.arrayBuffer();
-      const file = new File([arrayBuffer], 'DamagedHelmet.glb');
+      const file = new File([arrayBuffer], 'model');
       
-      const { gltf, buffers } = await gltfLoader.loadFile(file);
-      gltfModel = await gltfLoader.parse(gltf, buffers);
+      await gltfLoader.load(file);
+      gltfModel = await gltfLoader.parse();
       
       modelStatus.textContent = '기본 모델 로딩 완료';
       render();
@@ -221,56 +292,133 @@ function main() {
     }
   }
 
-  // Load default model on start
   loadDefaultModel();
 
-  // =========================
-  // draw + render
-  // =========================
-  function drawScene(projectionMatrix, cameraMatrix, textureMatrix, lightWorldMatrix, programInfo) {
+  // ----- draw helpers -----
+  function getModelWorld() {
+    let world = m4.identity();
+    world = m4.translate(world, 0, 0, 0);
+    world = m4.scale(world, 5., 5., 5.);
+    //world = m4.scale(world, gltfModel.scale, gltfModel.scale, gltfModel.scale);
+    world = m4.translate(world, 0, 0.05, 0);
+    return world;
+  }
+
+  function drawScenePass(passType /* 'opaque' | 'transmissive' */, projectionMatrix, cameraMatrix, textureMatrix, lightWorldMatrix, programInfo) {
     const viewMatrix = m4.inverse(cameraMatrix);
+    const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
 
     gl.useProgram(programInfo.program);
 
     webglUtils.setUniforms(programInfo, {
       u_view: viewMatrix,
       u_projection: projectionMatrix,
-    });
-
-    // for main program (ignored by depth program if uniforms not present)
-    webglUtils.setUniforms(programInfo, {
       u_bias: settings.bias,
       u_textureMatrix: textureMatrix,
       u_projectedTexture: shadowSystem.getDepthTexture(),
       u_reverseLightDirection: lightWorldMatrix.slice(8, 11),
       u_shadowMapSize: shadowSystem.getTextureSize(),
+      u_viewWorldPosition: cameraPosition,
+
+      // transmission BTDF inputs
+      u_sceneColor: sceneColorRT.colorTex,
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+    });
+  
+    webglUtils.setBuffersAndAttributes(gl, programInfo, planeBufferInfo);
+    webglUtils.setUniforms(programInfo, planeUniforms);
+    webglUtils.setUniforms(programInfo, {
+      u_transmissionFactor: 0.0,
+      u_transmissionTexture: whiteTexture,
+      u_roughness: 1.0,
+      u_ior: 1.5,
     });
 
-    // Plane
+    webglUtils.drawBufferInfo(gl, planeBufferInfo);
+    // cube
+    webglUtils.setBuffersAndAttributes(gl, programInfo, cubeBufferInfo);
+    webglUtils.setUniforms(programInfo, cubeUniforms);
+    webglUtils.setUniforms(programInfo, {
+      u_transmissionFactor: 0.0,
+      u_transmissionTexture: whiteTexture,
+      u_roughness: 1.0,
+      u_ior: 1.5,
+    });
+    webglUtils.drawBufferInfo(gl, cubeBufferInfo);
+    
+    // gltf
+    const world = getModelWorld();
+    //console.log("dlgmlals3 gltfModel : " +  JSON.stringify(gltfModel, null, 2));
+
+    for (const mesh of gltfModel.meshes) {
+      // 각 mesh의 primitives를 순회
+      for (const prim of mesh.primitives) {
+          webglUtils.setBuffersAndAttributes(gl, programInfo, prim.bufferInfo);
+          webglUtils.setUniforms(programInfo, {
+              u_colorMult: [1, 1, 1, 1],
+              u_texture: (prim.texture || whiteTexture),
+              u_world: world,
+              u_color: [1, 1, 1, 1],
+          });
+          webglUtils.drawBufferInfo(gl, prim.bufferInfo);
+        }
+      }
+    }
+
+
+
+  function drawShadowCasters(projectionMatrix, cameraMatrix, textureMatrix, lightWorldMatrix, programInfo) {
+    // 그림자는 "모두 캐스팅" (transmission 여부와 상관없이)
+    // -> 기존 네 drawScene(light pass) 구조 유지
+    const viewMatrix = m4.inverse(cameraMatrix);
+    const cameraPosition = [cameraMatrix[12], cameraMatrix[13], cameraMatrix[14]];
+
+    gl.useProgram(programInfo.program);
+
+    webglUtils.setUniforms(programInfo, {
+      u_view: viewMatrix,
+      u_projection: projectionMatrix,
+      u_bias: settings.bias,
+      u_textureMatrix: textureMatrix,
+      u_projectedTexture: shadowSystem.getDepthTexture(),
+      u_reverseLightDirection: lightWorldMatrix.slice(8, 11),
+      u_shadowMapSize: shadowSystem.getTextureSize(),
+      u_viewWorldPosition: cameraPosition,
+
+      // dummy
+      u_sceneColor: sceneColorRT.colorTex,
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+      u_transmissionFactor: 0.0,
+      u_transmissionTexture: whiteTexture,
+      u_roughness: 1.0,
+      u_ior: 1.5,
+    });
+
+    // plane
     webglUtils.setBuffersAndAttributes(gl, programInfo, planeBufferInfo);
     webglUtils.setUniforms(programInfo, planeUniforms);
     webglUtils.drawBufferInfo(gl, planeBufferInfo);
 
-    // GLTF Model
-    if (gltfModel && gltfModel.primitives.length) {
-      let world = m4.identity();
-      world = m4.translate(world, gltfModel.offset[0], gltfModel.offset[1], gltfModel.offset[2]);
-      world = m4.scale(world, gltfModel.scale, gltfModel.scale, gltfModel.scale);
-      world = m4.translate(world, 0, 0.01, 0);
+    // Cube
+    webglUtils.setBuffersAndAttributes(gl, programInfo, cubeBufferInfo);
+    webglUtils.setUniforms(programInfo, cubeUniforms);
+    webglUtils.drawBufferInfo(gl, cubeBufferInfo);
 
+    // dlgmlals3
+    /*
+    if (gltfModel && gltfModel.primitives.length) {
+      const world = getModelWorld();
       for (const p of gltfModel.primitives) {
         webglUtils.setBuffersAndAttributes(gl, programInfo, p.bufferInfo);
-
         webglUtils.setUniforms(programInfo, {
-          u_colorMult: [1, 1, 1, 1],
-          u_texture: (p.texture || whiteTexture),
+          u_texture: (p.material?.baseColorTexture || p.texture || whiteTexture),
           u_world: world,
-          u_color: [1, 1, 1, 1],
+          u_colorMult: [1,1,1,1],
         });
-
         webglUtils.drawBufferInfo(gl, p.bufferInfo);
       }
     }
+    */
   }
 
   function render() {
@@ -287,36 +435,38 @@ function main() {
 
     const lightProjectionMatrix = settings.perspective
       ? m4.perspective(degToRad(settings.fieldOfView), settings.projWidth / settings.projHeight, settings.lightNear, settings.lightFar)
-      : m4.orthographic(
-          -settings.projWidth / 2, settings.projWidth / 2,
-          -settings.projHeight / 2, settings.projHeight / 2,
-          settings.lightNear, settings.lightFar
-        );
+      : m4.orthographic(-settings.projWidth / 2, settings.projWidth / 2, -settings.projHeight / 2, settings.projHeight / 2, settings.lightNear, settings.lightFar);
 
-    // Pass 1: Shadow map
+    // ----- Shadow pass (기존 유지) -----
     shadowSystem.beginShadowPass();
-    drawScene(lightProjectionMatrix, lightWorldMatrix, m4.identity(), lightWorldMatrix, colorProgramInfo);
-
-    // Pass 2: Main render
+    drawShadowCasters(lightProjectionMatrix, lightWorldMatrix, m4.identity(), lightWorldMatrix, colorProgramInfo);
     shadowSystem.endShadowPass(gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     const textureMatrix = shadowSystem.createTextureMatrix(lightProjectionMatrix, lightWorldMatrix);
 
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const projectionMatrix = m4.perspective(fieldOfViewRadians, aspect, 1, 2000);
-    
-    // Calculate camera position from rotation and distance
+
     const cameraX = Math.sin(cameraRotationX) * Math.cos(cameraRotationY) * cameraDistance;
     const cameraY = Math.sin(cameraRotationY) * cameraDistance;
     const cameraZ = Math.cos(cameraRotationX) * Math.cos(cameraRotationY) * cameraDistance;
-    const cameraPosition = [cameraX, cameraY, cameraZ];
-    const cameraMatrix = m4.lookAt(cameraPosition, [0, 0, 0], [0, 1, 0]);
 
-    drawScene(projectionMatrix, cameraMatrix, textureMatrix, lightWorldMatrix, textureProgramInfo);
+    const cameraPosition = [
+      cameraTarget[0] + cameraX,
+      cameraTarget[1] + cameraY,
+      cameraTarget[2] + cameraZ
+    ];
+    const cameraMatrix = m4.lookAt(cameraPosition, cameraTarget, [0, 1, 0]);
+        
+    // ----- (2) Main: 먼저 opaque를 화면에 렌더 -----
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    // Frustum debug (optional)
+    drawScenePass('opaque', projectionMatrix, cameraMatrix, textureMatrix, lightWorldMatrix, textureProgramInfo);
+
+    // ----- Frustum debug (기존 유지) -----
     if (settings.frustumDebug) {
       gl.useProgram(colorProgramInfo.program);
       webglUtils.setBuffersAndAttributes(gl, colorProgramInfo, cubeLinesBufferInfo);
@@ -338,7 +488,6 @@ function main() {
   render();
 }
 
-// Wait for all scripts to load
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', main);
 } else {
